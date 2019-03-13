@@ -14,6 +14,8 @@ import com.feihua.framework.base.modules.user.api.ApiBaseUserPoService;
 import com.feihua.framework.base.modules.user.dto.BaseUserDto;
 import com.feihua.framework.base.modules.user.po.BaseUserPo;
 import com.feihua.framework.constants.DictEnum;
+import com.feihua.framework.shiro.pojo.ShiroUser;
+import com.feihua.framework.shiro.utils.ShiroUtils;
 import com.feihua.framework.utils.AliOssClientHelper;
 import com.feihua.utils.calendar.CalendarUtils;
 import com.feihua.utils.graphic.ImageUtils;
@@ -90,10 +92,7 @@ public class WwdUserController extends BaseController {
     private ApiBaseUserPoService apiBaseUserPoService;
     @Autowired
     private ApiWwdUserEnjoyPoService apiWwdUserEnjoyPoService;
-    @Autowired
-    private ApiWeixinUserPoService apiWeixinUserPoService;
-    @Autowired
-    private UserAuthHelper userAuthHelper;
+
     @Autowired
     private ApiBaseRolePoService apiBaseRolePoService;
 
@@ -337,9 +336,29 @@ public class WwdUserController extends BaseController {
         String userId = getLoginUser().getId();
         WwdUserDto userDto = apiWwdUserPoService.selectByUserId(userId);
         WwdUserDto baseDataScopeDto = apiWwdUserPoService.selectByPrimaryKey(userDto.getId(),false);
+        // 查询被邀请数据
+        WwdUserInvitationDto  wwdUserInvitationDto = apiWwdUserInvitationPoService.selectByInvitedWWdUserId(userDto.getId());
+
+        // 被邀请数据，如果存在表明已被邀请过
+        resultData.addData("invitedDto",wwdUserInvitationDto);
         return super.returnDto(baseDataScopeDto,resultData);
     }
+    @RepeatFormValidator
+    @RequiresPermissions("user")
+    @RequestMapping(value = "/user/current/invited",method = RequestMethod.GET)
+    public ResponseEntity getCurrentUserinvitedDto(){
 
+        ResponseJsonRender resultData=new ResponseJsonRender();
+        String userId = getLoginUser().getId();
+        WwdUserDto userDto = apiWwdUserPoService.selectByUserId(userId);
+        if (userDto == null) {
+            return super.returnDto(null,resultData);
+        }else{
+            // 查询被邀请数据
+            WwdUserInvitationDto  wwdUserInvitationDto = apiWwdUserInvitationPoService.selectByInvitedWWdUserId(userDto.getId());
+            return super.returnDto(wwdUserInvitationDto,resultData);
+        }
+    }
 
     /**
      * 单资源，获取id汪汪队用户未使用的邀请码
@@ -491,8 +510,9 @@ public class WwdUserController extends BaseController {
      * @return
      */
     @RepeatFormValidator
+    @RequiresPermissions("user")
     @RequestMapping(value = "/user/acceptInvited",method = RequestMethod.POST)
-    public ResponseEntity acceptInvited(String inviteCode,String type,String which){
+    public ResponseEntity acceptInvited(String inviteCode){
         ResponseJsonRender resultData=new ResponseJsonRender();
         WwdUserInvitationDto invitationDto = apiWwdUserInvitationPoService.selectUnUsedByCode(inviteCode);
         // 邀请码不存在
@@ -500,31 +520,32 @@ public class WwdUserController extends BaseController {
             throw new DataNotFoundException("inviteCode not exists","E404_invalidcode",404);
         }
 
-        String openid = (String) SecurityUtils.getSubject().getSession().getAttribute("publickplatform_openid_" + which);
-        if(StringUtils.isEmpty(openid)){
-            throw new DataNotFoundException("can not get user openid","E404_no_openid",404);
+        ShiroUser su = getLoginUser();
+
+        // 判断是否已被邀请
+        String userId = getLoginUser().getId();
+        WwdUserDto userDto = apiWwdUserPoService.selectByUserId(userId);
+        if (userDto != null) {
+            // 查询被邀请数据
+            WwdUserInvitationDto  wwdUserInvitationDto = apiWwdUserInvitationPoService.selectByInvitedWWdUserId(userDto.getId());
+            // 如果存在被邀请数据，已被邀请过，请勿重复
+            if (wwdUserInvitationDto != null) {
+
+                // 返回冲突，已被邀请
+                resultData.setCode(ResponseCode.E409_100001.getCode());
+                resultData.setMsg(ResponseCode.E409_100001.getMsg());
+                return new ResponseEntity(resultData, HttpStatus.CONFLICT);
+            }
         }
 
-        // 根据openid查询是否存在数据
-        WeixinUserPo weixinUserPoCondition = new WeixinUserPo();
-        weixinUserPoCondition.setOpenid(openid);
-        // DictEnum.WeixinType.publicplatform.name()
-        weixinUserPoCondition.setType(type);
-        weixinUserPoCondition.setWhich(which);
-        weixinUserPoCondition.setDelFlag(BasePo.YesNo.N.name());
-
-        // 这里一定是有值的，没有，请在页面重新获取用户信息
-        WeixinUserDto weixinUserDtoDb = apiWeixinUserPoService.selectOne(weixinUserPoCondition);
-        BaseUserPo baseUserPo = null;
-        if(StringUtils.isEmpty(weixinUserDtoDb.getUserId())){
-            baseUserPo = userAuthHelper.generateUserAuth(weixinUserDtoDb);
+        if(StringUtils.isEmpty(su.getId())){
 
             // 添加wwduser
             WwdUserPo wwdUserPo = new WwdUserPo();
-            wwdUserPo.setUserId(baseUserPo.getId());
-            wwdUserPo.setNickname(baseUserPo.getNickname());
-            wwdUserPo.setName(baseUserPo.getNickname());
-            wwdUserPo.setGender(baseUserPo.getGender());
+            wwdUserPo.setUserId(su.getId());
+            wwdUserPo.setNickname(su.getNickname());
+            wwdUserPo.setName(su.getNickname());
+            wwdUserPo.setGender(su.getGender());
             wwdUserPo.setIsverified(BasePo.YesNo.N.name());
             wwdUserPo.setShowInList(BasePo.YesNo.N.name());
             apiWwdUserPoService.preInsert(wwdUserPo,BasePo.DEFAULT_USER_ID);
@@ -534,8 +555,8 @@ public class WwdUserController extends BaseController {
             wwdUserPicPo.setWwdUserId(wwdUserDto.getId());
             wwdUserPicPo.setSequence(1);
             wwdUserPicPo.setType(Constants.WwdUserPicType.main.name());
-            wwdUserPicPo.setPicOriginUrl(baseUserPo.getPhoto());
-            wwdUserPicPo.setPicThumbUrl(baseUserPo.getPhoto());
+            wwdUserPicPo.setPicOriginUrl(su.getPhoto());
+            wwdUserPicPo.setPicThumbUrl(su.getPhoto());
             apiWwdUserPicPoService.preInsert(wwdUserPicPo,BasePo.DEFAULT_USER_ID);
             apiWwdUserPicPoService.insertSelective(wwdUserPicPo);
 
@@ -559,19 +580,19 @@ public class WwdUserController extends BaseController {
         }
 
 
-        if (baseUserPo != null) {
+        if (su != null) {
             //给用户分配小程序角色
             String roleCode = "wwd_mini_program_role";
             BaseRoleDto baseRoleDto = apiBaseRolePoService.selectByCode(roleCode);
             if(baseRoleDto != null){
 
                 // 查询用户是否绑定了角色
-                BaseUserRoleRelDto dbrel = apiBaseUserRoleRelPoService.selectByUserIdAndRoleId(baseUserPo.getId(),baseRoleDto.getId());
+                BaseUserRoleRelDto dbrel = apiBaseUserRoleRelPoService.selectByUserIdAndRoleId(su.getId(),baseRoleDto.getId());
 
                 if (dbrel == null) {
                     UserBindRolesParamDto userBindRolesParamDto = new UserBindRolesParamDto();
                     userBindRolesParamDto.setCurrentUserId(BasePo.DEFAULT_USER_ID);
-                    userBindRolesParamDto.setUserId(baseUserPo.getId());
+                    userBindRolesParamDto.setUserId(su.getId());
                     List<String> roleIds = new ArrayList<>(1);
                     roleIds.add(baseRoleDto.getId());
                     userBindRolesParamDto.setRoleIds(roleIds);

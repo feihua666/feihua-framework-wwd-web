@@ -2,6 +2,7 @@ package com.wwd.service.modules.wwd.api;
 
 import com.wwd.service.modules.wwd.dto.WwdUserPicDto;
 import com.wwd.service.modules.wwd.po.WwdUserPicPo;
+import feihua.jdbc.api.pojo.Orderby;
 
 import java.util.List;
 
@@ -12,4 +13,5 @@ import java.util.List;
 public interface ApiWwdUserPicPoService extends feihua.jdbc.api.service.ApiBaseService<WwdUserPicPo, WwdUserPicDto, String> {
 
     public List<WwdUserPicDto> selectByWwdUserId(String wwdUserId);
+    public List<WwdUserPicDto> selectByWwdUserId(String wwdUserId, Orderby orderby);
 }

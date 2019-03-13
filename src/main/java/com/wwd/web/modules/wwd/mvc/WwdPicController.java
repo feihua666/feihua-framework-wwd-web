@@ -9,6 +9,7 @@ import com.feihua.framework.rest.ResponseJsonRender;
 import com.feihua.framework.rest.interceptor.RepeatFormValidator;
 import com.feihua.framework.rest.modules.common.mvc.BaseController;
 import com.feihua.utils.http.httpServletResponse.ResponseCode;
+import feihua.jdbc.api.utils.OrderbyUtils;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,7 +49,7 @@ public class WwdPicController extends BaseController {
     public ResponseEntity getPic(@PathVariable String id){
 
         ResponseJsonRender resultData=new ResponseJsonRender();
-        List<WwdUserPicDto> list = apiWwdUserPicPoService.selectByWwdUserId(id);
+        List<WwdUserPicDto> list = apiWwdUserPicPoService.selectByWwdUserId(id,OrderbyUtils.getOrderbyFromThreadLocal());
         return super.returnList(list,resultData);
     }
     /**
@@ -150,7 +151,7 @@ public class WwdPicController extends BaseController {
         ResponseJsonRender resultData=new ResponseJsonRender();
         String userId = getLoginUser().getId();
         WwdUserDto userDto = apiWwdUserPoService.selectByUserId(userId);
-        List<WwdUserPicDto> list = apiWwdUserPicPoService.selectByWwdUserId(userDto.getId());
+        List<WwdUserPicDto> list = apiWwdUserPicPoService.selectByWwdUserId(userDto.getId(),OrderbyUtils.getOrderbyFromThreadLocal());
         return super.returnList(list,resultData);
     }
 }

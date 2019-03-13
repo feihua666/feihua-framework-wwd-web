@@ -99,4 +99,12 @@ public class ApiWwdUserInvitationPoServiceImpl extends ApiBaseServiceImpl<WwdUse
         wwdUserInvitationPo.setDelFlag(BasePo.YesNo.N.name());
         return this.selectOne(wwdUserInvitationPo);
     }
+
+    @Override
+    public WwdUserInvitationDto selectByInvitedWWdUserId(String invitedWWdUserId) {
+        WwdUserInvitationPo wwdUserInvitationPo = new WwdUserInvitationPo();
+        wwdUserInvitationPo.setInvitedWwdUserId(invitedWWdUserId);
+        wwdUserInvitationPo.setDelFlag(BasePo.YesNo.N.name());
+        return this.selectOne(wwdUserInvitationPo);
+    }
 }

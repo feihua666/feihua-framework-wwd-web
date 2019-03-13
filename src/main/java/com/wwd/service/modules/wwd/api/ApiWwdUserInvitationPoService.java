@@ -55,4 +55,11 @@ public interface ApiWwdUserInvitationPoService extends feihua.jdbc.api.service.A
      * @return
      */
     public WwdUserInvitationDto selectUnUsedByCode(String invitationCode);
+
+    /**
+     * 根据被邀请wwd userid查询，主要用来判断是否被邀请过
+     * @param invitedWWdUserId
+     * @return
+     */
+    public WwdUserInvitationDto selectByInvitedWWdUserId(String invitedWWdUserId);
 }

@@ -15,6 +15,8 @@ import com.feihua.utils.properties.PropertiesUtils;
 import com.feihua.wechat.ParamsDto;
 import com.feihua.wechat.miniprogram.api.ApiMiniProgramService;
 import com.feihua.wechat.miniprogram.dto.LoginCredentialsDto;
+import com.wwd.service.modules.wwd.api.ApiWwdUserPoService;
+import com.wwd.service.modules.wwd.dto.WwdUserDto;
 import feihua.jdbc.api.pojo.BasePo;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.AuthenticationToken;
@@ -24,6 +26,8 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by yangwei
@@ -36,6 +40,8 @@ public class MyAccountServiceImpl extends AccountServiceImpl {
     private ApiMiniProgramService apiMiniProgramService;
     @Autowired
     private ApiBaseUserPoService apiBaseUserPoService;
+    @Autowired
+    private ApiWwdUserPoService apiWwdUserPoService;
     @Override
     public AuthenticationToken createToken(javax.servlet.ServletRequest servletRequest, DictEnum.LoginType loginType, String loginClient) {
         AuthenticationToken token = null;

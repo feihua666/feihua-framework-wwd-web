@@ -5,6 +5,7 @@ import com.wwd.service.modules.wwd.api.ApiWwdUserPicPoService;
 import com.wwd.service.modules.wwd.dto.WwdUserPicDto;
 import com.wwd.service.modules.wwd.po.WwdUserPicPo;
 import feihua.jdbc.api.pojo.BasePo;
+import feihua.jdbc.api.pojo.Orderby;
 import feihua.jdbc.api.service.impl.ApiBaseServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,14 @@ public class ApiWwdUserPicPoServiceImpl extends ApiBaseServiceImpl<WwdUserPicPo,
         wwdUserPicPo.setWwdUserId(wwdUserId);
         wwdUserPicPo.setDelFlag(BasePo.YesNo.N.name());
         return this.selectList(wwdUserPicPo);
+    }
+
+    @Override
+    public List<WwdUserPicDto> selectByWwdUserId(String wwdUserId, Orderby orderby) {
+        WwdUserPicPo wwdUserPicPo = new WwdUserPicPo();
+        wwdUserPicPo.setWwdUserId(wwdUserId);
+        wwdUserPicPo.setDelFlag(BasePo.YesNo.N.name());
+        return this.selectList(wwdUserPicPo,orderby);
     }
 
     @Override

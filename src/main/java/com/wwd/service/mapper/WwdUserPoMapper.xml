@@ -2794,7 +2794,7 @@
     <include refid="MultiTable_Column_List" />
     from
     wwd_user wu
-    LEFT JOIN wwd_user_area wua ON wu.user_id = wua.wwd_user_id
+    LEFT JOIN wwd_user_area wua ON wu.id = wua.wwd_user_id
     where wu.del_flag = 'N' and wu.isverified = 'Y' and wu.show_in_list = 'Y'
     <if test="keyword != null and keyword != ''">
       and (wu.name like concat('%',#{keyword},'%')
@@ -2807,62 +2807,36 @@
       or wua.home_district_name like concat('%',#{keyword},'%')
       )
     </if>
-    <if test="name != null and name != ''">
-      and wu.name like concat('%',#{name},'%')
-    </if>
-    <if test="nickname != null and nickname != ''">
-      and wu.nickname like concat('%',#{nickname},'%')
-    </if>
-    <if test="mobile != null and mobile != ''">
-      and wu.mobile like concat('%',#{mobile},'%')
-    </if>
+
     <if test="gender != null and gender != ''">
       and wu.gender = #{gender}
     </if>
     <if test="education != null and education != ''">
       and wu.education = #{education}
     </if>
-    <if test="constellation != null and constellation != ''">
-      and wu.constellation = #{constellation}
+
+    <if test="ageStart != null and ageEnd != null ">
+      and wu.birth_day BETWEEN #{ageStart} and #{ageEnd}
     </if>
-    <if test="ageRange != null and ageRange.size()>0">
-      and wu.birth_day BETWEEN
-      <foreach close="" collection="ageRange" index="index" item="item" open="" separator=" and ">
-        #{item}
-      </foreach>
+    <if test="homeProvinceId != null and homeProvinceId != ''">
+      and wua.home_province_id = #{homeProvinceId}
+    </if>
+    <if test="homeCityId != null and homeCityId != ''">
+      and wua.home_city_id = #{homeCityId}
+    </if>
+    <if test="homeDistrictId != null and homeDistrictId != ''">
+      and wua.home_district_id = #{homeDistrictId}
+    </if>
+    <if test="nowProvinceId != null and nowProvinceId != ''">
+      and wua.now_province_id = #{nowProvinceId}
+    </if>
+    <if test="nowCityId != null and nowCityId != ''">
+      and wua.now_city_id = #{nowCityId}
+    </if>
+    <if test="nowDistrictId != null and nowDistrictId != ''">
+      and wua.now_district_id = #{nowDistrictId}
     </if>
 
-    <if test="homeArea != null and homeArea.size()>0">
-      and (wua.home_province_id in
-      <foreach close=")" collection="homeArea" index="index" item="item" open="(" separator=",">
-        #{item}
-      </foreach>
-      or  wua.home_city_id in
-      <foreach close=")" collection="homeArea" index="index" item="item" open="(" separator=",">
-        #{item}
-      </foreach>
-      or wua.home_district_id in
-      <foreach close=")" collection="homeArea" index="index" item="item" open="(" separator=",">
-        #{item}
-      </foreach>
-      )
-    </if>
-
-    <if test="nowArea != null and nowArea.size()>0">
-      and (wua.now_province_id in
-      <foreach close=")" collection="nowArea" index="index" item="item" open="(" separator=",">
-        #{item}
-      </foreach>
-      or  wua.now_city_id in
-      <foreach close=")" collection="nowArea" index="index" item="item" open="(" separator=",">
-        #{item}
-      </foreach>
-      or wua.now_district_id in
-      <foreach close=")" collection="nowArea" index="index" item="item" open="(" separator=",">
-        #{item}
-      </foreach>
-      )
-    </if>
     ORDER BY wu.create_at desc
   </select>
 

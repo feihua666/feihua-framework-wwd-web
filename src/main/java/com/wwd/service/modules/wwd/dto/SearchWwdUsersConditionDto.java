@@ -13,35 +13,38 @@ import java.util.List;
  */
 public class SearchWwdUsersConditionDto extends BaseConditionDto {
 
-    //
-    private String name;
-    //昵称
-    private String nickname;
-    //手机号
-    private String mobile;
+    //关键字
+    private String keyword;
     //性别
     private String gender;
 
     //学历
     private String education;
-    //星座
-    private String constellation;
-    //关键字
-    private String keyword;
 
-    //家乡
-    private List<String> homeArea;
-    //工作地
-    private List<String> nowArea;
-    //年龄范围
-    private List<Date> ageRange;
+    private String homeProvinceId;
+    private String homeCityId;
+    private String homeDistrictId;
+    private String nowProvinceId;
+    private String nowCityId;
+    private String nowDistrictId;
 
-    public String getConstellation() {
-        return constellation;
+    private Date ageStart;
+    private Date ageEnd;
+
+    public String getKeyword() {
+        return keyword;
     }
 
-    public void setConstellation(String constellation) {
-        this.constellation = constellation;
+    public void setKeyword(String keyword) {
+        this.keyword = keyword;
+    }
+
+    public String getGender() {
+        return gender;
+    }
+
+    public void setGender(String gender) {
+        this.gender = gender;
     }
 
     public String getEducation() {
@@ -52,67 +55,67 @@ public class SearchWwdUsersConditionDto extends BaseConditionDto {
         this.education = education;
     }
 
-    public String getKeyword() {
-        return keyword;
+    public String getHomeProvinceId() {
+        return homeProvinceId;
     }
 
-    public void setKeyword(String keyword) {
-        this.keyword = keyword;
+    public void setHomeProvinceId(String homeProvinceId) {
+        this.homeProvinceId = homeProvinceId;
     }
 
-    public List<String> getHomeArea() {
-        return homeArea;
+    public String getHomeCityId() {
+        return homeCityId;
     }
 
-    public void setHomeArea(List<String> homeArea) {
-        this.homeArea = homeArea;
+    public void setHomeCityId(String homeCityId) {
+        this.homeCityId = homeCityId;
     }
 
-    public List<String> getNowArea() {
-        return nowArea;
+    public String getHomeDistrictId() {
+        return homeDistrictId;
     }
 
-    public void setNowArea(List<String> nowArea) {
-        this.nowArea = nowArea;
+    public void setHomeDistrictId(String homeDistrictId) {
+        this.homeDistrictId = homeDistrictId;
     }
 
-    public List<Date> getAgeRange() {
-        return ageRange;
+    public String getNowProvinceId() {
+        return nowProvinceId;
     }
 
-    public void setAgeRange(List<Date> ageRange) {
-        this.ageRange = ageRange;
+    public void setNowProvinceId(String nowProvinceId) {
+        this.nowProvinceId = nowProvinceId;
     }
 
-    public String getName() {
-        return name;
+    public String getNowCityId() {
+        return nowCityId;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setNowCityId(String nowCityId) {
+        this.nowCityId = nowCityId;
     }
 
-    public String getNickname() {
-        return nickname;
+    public String getNowDistrictId() {
+        return nowDistrictId;
     }
 
-    public void setNickname(String nickname) {
-        this.nickname = nickname;
+    public void setNowDistrictId(String nowDistrictId) {
+        this.nowDistrictId = nowDistrictId;
     }
 
-    public String getMobile() {
-        return mobile;
+    public Date getAgeStart() {
+        return ageStart;
     }
 
-    public void setMobile(String mobile) {
-        this.mobile = mobile;
+    public void setAgeStart(Date ageStart) {
+        this.ageStart = ageStart;
     }
 
-    public String getGender() {
-        return gender;
+    public Date getAgeEnd() {
+        return ageEnd;
     }
 
-    public void setGender(String gender) {
-        this.gender = gender;
+    public void setAgeEnd(Date ageEnd) {
+        this.ageEnd = ageEnd;
     }
 }

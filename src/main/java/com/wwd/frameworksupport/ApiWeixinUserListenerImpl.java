@@ -20,12 +20,6 @@ public class ApiWeixinUserListenerImpl implements ApiWeixinUserListener{
     private UserAuthHelper UserAuthHelper;
     @Override
     public void onAddWexinUser(WeixinUserDto weixinUserDto) {
-        if(DictEnum.WeixinType.publicplatform.name().equals(weixinUserDto.getType())){
-            // 如果是网页授权，先不插入用户认证信息，邀请wwd用户的时候再添加
-            return;
-
-        }
-
         UserAuthHelper.generateUserAuth(weixinUserDto);
     }
 
