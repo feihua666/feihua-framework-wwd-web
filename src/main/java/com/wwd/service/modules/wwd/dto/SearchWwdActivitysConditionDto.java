@@ -36,6 +36,8 @@ public class SearchWwdActivitysConditionDto extends BaseConditionDto {
 
     private Integer headcount;
 
+    private String headcountDesc;
+
     private String introduced;
 
     private String payRule;
@@ -71,6 +73,14 @@ public class SearchWwdActivitysConditionDto extends BaseConditionDto {
     private String[] statusArr;
 
     private String keyword;
+
+    public String getHeadcountDesc() {
+        return headcountDesc;
+    }
+
+    public void setHeadcountDesc(String headcountDesc) {
+        this.headcountDesc = headcountDesc;
+    }
 
     public String getKeyword() {
         return keyword;

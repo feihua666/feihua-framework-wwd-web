@@ -34,6 +34,8 @@ public class UpdateWwdActivity extends UpdateFormDto {
 
     private Integer headcount;
 
+    private String headcountDesc;
+
     private String introduced;
 
     private String payRule;
@@ -65,6 +67,14 @@ public class UpdateWwdActivity extends UpdateFormDto {
     private String updateBy;
 
     private String content;
+
+    public String getHeadcountDesc() {
+        return headcountDesc;
+    }
+
+    public void setHeadcountDesc(String headcountDesc) {
+        this.headcountDesc = headcountDesc;
+    }
 
     public String getId() {
         return id;

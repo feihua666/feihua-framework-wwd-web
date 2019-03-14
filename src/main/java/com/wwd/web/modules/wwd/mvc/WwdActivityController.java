@@ -75,6 +75,7 @@ public class WwdActivityController extends BaseController {
         basePo.setType(dto.getType());
         basePo.setStatus(dto.getStatus());
         basePo.setHeadcount(dto.getHeadcount());
+        basePo.setHeadcountDesc(dto.getHeadcountDesc());
         basePo.setIntroduced(dto.getIntroduced());
         basePo.setPayRule(dto.getPayRule());
         basePo.setPrice(dto.getPrice());
@@ -174,6 +175,7 @@ public class WwdActivityController extends BaseController {
         basePo.setType(dto.getType());
         basePo.setStatus(dto.getStatus());
         basePo.setHeadcount(dto.getHeadcount());
+        basePo.setHeadcountDesc(dto.getHeadcountDesc());
         basePo.setIntroduced(dto.getIntroduced());
         basePo.setPayRule(dto.getPayRule());
         basePo.setPrice(dto.getPrice());
