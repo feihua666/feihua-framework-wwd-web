@@ -72,6 +72,7 @@ public class WwdParticipateController extends BaseController {
         basePo.setType(dto.getType());
         basePo.setPayStatus(dto.getPayStatus());
         basePo.setStatus(dto.getStatus());
+        basePo.setRemarks(dto.getRemarks());
         basePo.setDataUserId(dto.getDataUserId());
         basePo.setDataOfficeId(dto.getDataOfficeId());
         basePo.setDataType(dto.getDataType());
@@ -156,6 +157,7 @@ public class WwdParticipateController extends BaseController {
         basePo.setType(dto.getType());
         basePo.setPayStatus(dto.getPayStatus());
         basePo.setStatus(dto.getStatus());
+        basePo.setRemarks(dto.getRemarks());
         basePo.setDataUserId(dto.getDataUserId());
         basePo.setDataOfficeId(dto.getDataOfficeId());
         basePo.setDataType(dto.getDataType());

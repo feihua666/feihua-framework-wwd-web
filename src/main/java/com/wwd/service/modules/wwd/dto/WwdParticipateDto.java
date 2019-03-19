@@ -23,6 +23,8 @@ public class WwdParticipateDto extends BaseDbDto<String> {
 
     private String status;
 
+    private String remarks;
+
     private String dataUserId;
 
     private String dataOfficeId;
@@ -45,6 +47,13 @@ public class WwdParticipateDto extends BaseDbDto<String> {
 
     private BaseUserDto baseUserDto;
 
+    public String getRemarks() {
+        return remarks;
+    }
+
+    public void setRemarks(String remarks) {
+        this.remarks = remarks;
+    }
 
     public BaseUserDto getBaseUserDto() {
         return baseUserDto;

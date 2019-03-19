@@ -22,6 +22,8 @@ public class UpdateWwdParticipate extends UpdateFormDto {
 
     private String status;
 
+    private String remarks;
+
     private String dataUserId;
 
     private String dataOfficeId;
@@ -40,6 +42,13 @@ public class UpdateWwdParticipate extends UpdateFormDto {
 
     private String updateBy;
 
+    public String getRemarks() {
+        return remarks;
+    }
+
+    public void setRemarks(String remarks) {
+        this.remarks = remarks;
+    }
 
     public String getId() {
         return id;

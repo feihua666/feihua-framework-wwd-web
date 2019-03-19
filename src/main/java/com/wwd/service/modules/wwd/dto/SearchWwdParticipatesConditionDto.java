@@ -24,6 +24,8 @@ public class SearchWwdParticipatesConditionDto extends BaseConditionDto {
 
     private String status;
 
+    private String remarks;
+
     private String dataUserId;
 
     private String dataOfficeId;
@@ -45,6 +47,14 @@ public class SearchWwdParticipatesConditionDto extends BaseConditionDto {
     private String[] statusArr;
 
     private String keyword;
+
+    public String getRemarks() {
+        return remarks;
+    }
+
+    public void setRemarks(String remarks) {
+        this.remarks = remarks;
+    }
 
     public String getKeyword() {
         return keyword;

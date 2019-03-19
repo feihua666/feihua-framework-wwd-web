@@ -40,6 +40,7 @@ public class ApiWwdParticipateServiceImpl extends ApiBaseServiceImpl<WwdParticip
         dto.setType(po.getType());
         dto.setPayStatus(po.getPayStatus());
         dto.setStatus(po.getStatus());
+        dto.setRemarks(po.getRemarks());
         dto.setDataUserId(po.getDataUserId());
         dto.setDataOfficeId(po.getDataOfficeId());
         dto.setDataType(po.getDataType());
