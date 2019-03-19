@@ -51,7 +51,6 @@ public class WwdActivityController extends BaseController {
      * 单资源，添加
      *
      * @param dto
-     *
      * @return
      */
     @RepeatFormValidator
@@ -115,7 +114,6 @@ public class WwdActivityController extends BaseController {
      * 单资源，删除
      *
      * @param id
-     *
      * @return
      */
     @RepeatFormValidator
@@ -148,7 +146,6 @@ public class WwdActivityController extends BaseController {
      *
      * @param id
      * @param dto
-     *
      * @return
      */
     @RepeatFormValidator
@@ -215,11 +212,71 @@ public class WwdActivityController extends BaseController {
         }
     }
 
+
+    /**
+     * 单资源，复制活动
+     *
+     * @param id
+     * @return
+     */
+    @RequiresPermissions("wwd:activity:copy")
+    @RequestMapping(value = "/activity/copy/{id}", method = RequestMethod.GET)
+    public ResponseEntity copy(@PathVariable String id) {
+        logger.info("复制汪汪队活动开始");
+        logger.info("当前登录用户id:{}", getLoginUser().getId());
+        logger.info("汪汪队活动id:{}", id);
+        ResponseJsonRender resultData = new ResponseJsonRender();
+
+        WwdActivityDto dto = apiWwdActivityService.selectByPrimaryKey(id);
+        // 表单值设置
+        WwdActivity basePo = new WwdActivity();
+        // id
+        basePo.setId(null);
+        basePo.setTitle("[复制] " + dto.getTitle());
+        basePo.setTitleUrl(dto.getTitleUrl());
+        basePo.setAuthor(dto.getAuthor());
+        basePo.setStartTime(null);
+        basePo.setEndTime(null);
+        basePo.setAddr(dto.getAddr());
+        basePo.setContact(dto.getContact());
+        basePo.setSequence(dto.getSequence());
+        basePo.setType(dto.getType());
+        basePo.setStatus(Constants.ActivityStatus.EDIT.getCode());
+        basePo.setHeadcount(dto.getHeadcount());
+        basePo.setHeadcountDesc(dto.getHeadcountDesc());
+        basePo.setIntroduced(dto.getIntroduced());
+        basePo.setPayRule(dto.getPayRule());
+        basePo.setPrice(dto.getPrice());
+        basePo.setMalePrice(dto.getMalePrice());
+        basePo.setFemalePrice(dto.getFemalePrice());
+        basePo.setActivityStatement(dto.getActivityStatement());
+        basePo.setDataUserId(dto.getDataUserId());
+        basePo.setDataOfficeId(dto.getDataOfficeId());
+        basePo.setDataType(dto.getDataType());
+        basePo.setDataAreaId(dto.getDataAreaId());
+        basePo.setContent(dto.getContent());
+
+        basePo = apiWwdActivityService.preInsert(basePo, getLoginUser().getId());
+        WwdActivityDto r = apiWwdActivityService.insert(basePo);
+        if (r == null) {
+            // 更新失败，资源不存在
+            resultData.setCode(ResponseCode.E404_100001.getCode());
+            resultData.setMsg(ResponseCode.E404_100001.getMsg());
+            logger.info("code:{},msg:{}", resultData.getCode(), resultData.getMsg());
+            logger.info("复制汪汪队活动结束，失败");
+            return new ResponseEntity(resultData, HttpStatus.NOT_FOUND);
+        } else {
+            // 更新成功，已被成功创建
+            logger.info("复制的汪汪队活动id:{}", id);
+            logger.info("复制汪汪队活动结束，成功");
+            return new ResponseEntity(resultData, HttpStatus.CREATED);
+        }
+    }
+
     /**
      * 单资源，获取id汪汪队活动
      *
      * @param id
-     *
      * @return
      */
     @RepeatFormValidator
@@ -243,7 +300,6 @@ public class WwdActivityController extends BaseController {
      * 复数资源，搜索汪汪队活动
      *
      * @param dto
-     *
      * @return
      */
     @RepeatFormValidator

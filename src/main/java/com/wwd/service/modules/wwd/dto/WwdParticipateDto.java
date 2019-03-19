@@ -1,5 +1,6 @@
 package com.wwd.service.modules.wwd.dto;
 
+import com.feihua.framework.base.modules.user.dto.BaseUserDto;
 import feihua.jdbc.api.pojo.BaseDbDto;
 import java.util.Date;
 
@@ -39,6 +40,27 @@ public class WwdParticipateDto extends BaseDbDto<String> {
     private Date updateAt;
 
     private String updateBy;
+
+    private WwdUserDto wwdUserDto;
+
+    private BaseUserDto baseUserDto;
+
+
+    public BaseUserDto getBaseUserDto() {
+        return baseUserDto;
+    }
+
+    public void setBaseUserDto(BaseUserDto baseUserDto) {
+        this.baseUserDto = baseUserDto;
+    }
+
+    public WwdUserDto getWwdUserDto() {
+        return wwdUserDto;
+    }
+
+    public void setWwdUserDto(WwdUserDto wwdUserDto) {
+        this.wwdUserDto = wwdUserDto;
+    }
 
     public String getId() {
         return id;

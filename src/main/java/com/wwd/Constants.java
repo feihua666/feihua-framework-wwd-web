@@ -6,12 +6,13 @@ package com.wwd;
  */
 public class Constants {
     // 汪汪队图片类型
-    public enum WwdUserPicType{
+    public enum WwdUserPicType {
         main,      // 主图
         normal     //非主图
     }
+
     // 汪汪队活动参与1/正常，2/替补，3/退出
-    public enum WwdParticipateStatus{
+    public enum WwdParticipateStatus {
         NORMAL("1", "正常"),
         ALTERNATE("2", "替补"),
         QUIT("3", "退出");
@@ -78,9 +79,10 @@ public class Constants {
     }
 
     /**
-     * 活动状态（1，报名中，2，名额满，3，已结束）
+     * 活动状态（0,编辑中,1，报名中，2，名额满，3，已结束）
      */
     public enum ActivityStatus {
+        EDIT("0", "编辑中"),
         APPLYING("1", "报名中"),
         QUOTA_FULL("2", "名额满"),
         END("3", "已结束");
