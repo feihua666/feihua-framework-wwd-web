@@ -1,38 +1,52 @@
 package com.wwd.web.modules.wwd.mvc;
 
+import com.feihua.framework.base.modules.pay.api.ApiPayService;
+import com.feihua.framework.base.modules.pay.wxpay.WxUnifiedOrderForInnerParam;
+import com.feihua.framework.base.modules.pay.wxpay.sdk.MyWxPayConfig;
+import com.feihua.framework.base.modules.pay.wxpay.sdk.WXPayConstants;
+import com.feihua.framework.base.modules.pay.wxpay.sdk.WXPayUtil;
 import com.feihua.framework.base.modules.role.dto.BaseRoleDto;
 import com.feihua.framework.base.modules.user.api.ApiBaseUserPoService;
 import com.feihua.framework.base.modules.user.dto.BaseUserDto;
+import com.feihua.framework.constants.DictEnum;
 import com.feihua.framework.rest.ResponseJsonRender;
 import com.feihua.framework.rest.interceptor.RepeatFormValidator;
 import com.feihua.framework.rest.modules.common.mvc.BaseController;
+import com.feihua.utils.calendar.CalendarUtils;
+import com.feihua.utils.http.httpServletRequest.RequestUtils;
 import com.feihua.utils.http.httpServletResponse.ResponseCode;
-import com.wwd.service.modules.wwd.dto.WwdParticipateDto;
-import com.wwd.service.modules.wwd.dto.WwdUserDto;
+import com.wwd.Constants;
+import com.wwd.service.modules.wwd.api.ApiWwdActivityService;
+import com.wwd.service.modules.wwd.api.ApiWwdParticipateService;
+import com.wwd.service.modules.wwd.api.ApiWwdUserPoService;
+import com.wwd.service.modules.wwd.dto.*;
+import com.wwd.service.modules.wwd.po.WwdActivity;
+import com.wwd.service.modules.wwd.po.WwdParticipate;
 import feihua.jdbc.api.pojo.BasePo;
 import feihua.jdbc.api.pojo.PageAndOrderbyParamDto;
 import feihua.jdbc.api.pojo.PageResultDto;
 import feihua.jdbc.api.utils.OrderbyUtils;
 import feihua.jdbc.api.utils.PageUtils;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
-import com.wwd.service.modules.wwd.dto.WwdActivityOrderDto;
-import com.wwd.service.modules.wwd.dto.SearchWwdActivityOrdersConditionDto;
+import org.springframework.web.bind.annotation.*;
 import com.wwd.service.modules.wwd.api.ApiWwdActivityOrderService;
 import com.wwd.web.modules.wwd.dto.AddWwdActivityOrder;
 import com.wwd.web.modules.wwd.dto.UpdateWwdActivityOrder;
 import com.wwd.service.modules.wwd.po.WwdActivityOrder;
 
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 汪汪队活动订单管理
@@ -50,6 +64,15 @@ public class WwdActivityOrderController extends BaseController {
     @Autowired
     private ApiBaseUserPoService apiBaseUserPoService;
 
+    @Autowired
+    private ApiWwdActivityService apiWwdActivityService;
+
+    @Autowired
+    private ApiWwdParticipateService apiWwdParticipateService;
+    @Autowired
+    private ApiWwdUserPoService apiWwdUserPoService;
+    @Autowired
+    private ApiPayService<WxUnifiedOrderForInnerParam> apiWxPayForInnerService;
     /**
      * 单资源，添加
      * @param dto
@@ -244,5 +267,209 @@ public class WwdActivityOrderController extends BaseController {
             resultData.setMsg(ResponseCode.E404_100001.getMsg());
             return new ResponseEntity(resultData,HttpStatus.NOT_FOUND);
         }
+    }
+
+
+    /**
+     * 报名并支付
+     * 说明，参与信息和活动订单信息表中未支付和已支付状态一个人只能有一条数据，其它状态可以有多条
+     * @param id
+     * @param which
+     * @return
+     */
+    @RepeatFormValidator
+    @RequiresPermissions("wwd:activity:order:order")
+    @RequestMapping(value = "/activity/{id}/order", method = RequestMethod.POST)
+    public ResponseEntity order(@PathVariable String id,String which,String desc,String notifyUrl) {
+
+        ResponseJsonRender resultData = new ResponseJsonRender();
+        // 查询活动信息
+        WwdActivityDto wwdActivityDto = apiWwdActivityService.selectByPrimaryKey(id);
+        if (wwdActivityDto == null) {
+            return super.returnDto(null, resultData);
+        }
+        // 查询报名人数
+        int headcount = apiWwdParticipateService.selectCountPaidParticipate(id);
+        // 报名人数已满
+        if( headcount >= wwdActivityDto.getHeadcount()){
+            resultData.setCode("headcount=enough");
+            resultData.setMsg("headcount=enough");
+            return new ResponseEntity(resultData,HttpStatus.CONFLICT);
+        }
+        WwdUserDto wwdUserDto = apiWwdUserPoService.selectByUserId(getLoginUser().getId());
+        // 查询是否已报名
+        // 查询参与信息
+        WwdParticipate wwdParticipate = null;
+        List<WwdParticipate> wwdParticipates = apiWwdParticipateService.selectByActivityIdAndWwdUserId(id, wwdUserDto.getId());
+        if(wwdParticipates != null){
+            for (WwdParticipate participate : wwdParticipates) {
+                if(Constants.PayStatus.paid.name().equals(participate.getPayStatus()) || Constants.PayStatus.no_pay.name().equals(participate.getPayStatus())){
+                    wwdParticipate = participate;
+                    break;
+                }
+            }
+        }
+
+        // 如果没有参与信息，添加一条
+        if (wwdParticipate == null) {
+            WwdParticipate wwdParticipateBeInsert = new WwdParticipate();
+            wwdParticipateBeInsert.setWwdUserId(wwdUserDto.getId());
+            wwdParticipateBeInsert.setWwdActivityId(id);
+            // 未支付
+            wwdParticipateBeInsert.setPayStatus(Constants.PayStatus.no_pay.name());
+            wwdParticipateBeInsert.setType(BasePo.YesNo.N.name());
+            wwdParticipateBeInsert.setStatus(Constants.WwdParticipateStatus.NORMAL.getCode());
+            wwdParticipate = apiWwdParticipateService.preInsert(wwdParticipateBeInsert, getLoginUser().getId());
+            wwdParticipate = apiWwdParticipateService.insertSimple(wwdParticipate);
+        }
+        // 判断是否已支付,如果
+        if (Constants.PayStatus.paid.name().equals(wwdParticipate.getPayStatus())) {
+            resultData.setCode("payStatus=paid");
+            resultData.setMsg("payStatus=paid");
+            return new ResponseEntity(resultData,HttpStatus.CONFLICT);
+        }
+        // 判断订单是否已支付
+        // 查询订单
+        WwdActivityOrder wwdActivityOrder = apiWwdActivityOrderService.selectByParticipateIdAndUserId(wwdParticipate.getId(),getLoginUserId());
+        // 如果订单信息不存在，添加一条
+        if(wwdActivityOrder == null){
+            WwdActivityOrder wwdActivityOrder1 = new WwdActivityOrder();
+            wwdActivityOrder1.setUserId(getLoginUserId());
+            wwdActivityOrder1.setParticipateId(wwdParticipate.getId());
+            wwdActivityOrder1.setActivityTitle(wwdActivityDto.getTitle());
+            wwdActivityOrder1.setActivityUrl(wwdActivityDto.getTitleUrl());
+            wwdActivityOrder1.setStatus(Constants.PayStatus.no_pay.name());
+            wwdActivityOrder1.setType(Constants.PayType.wx.name());
+            wwdActivityOrder1.setOrderNo("HD" + CalendarUtils.dateToString(new Date(), CalendarUtils.DateStyle.YYYYMMDDHHMMSS) + RandomStringUtils.randomNumeric(6));
+            wwdActivityOrder = apiWwdActivityOrderService.preInsert(wwdActivityOrder1,getLoginUserId());
+            wwdActivityOrder = apiWwdActivityOrderService.insertSimple(wwdActivityOrder);
+        }
+
+        WxUnifiedOrderForInnerParam wxUnifiedOrderForInnerParam = new WxUnifiedOrderForInnerParam();
+        wxUnifiedOrderForInnerParam.setBody(wwdActivityDto.getTitle());
+        wxUnifiedOrderForInnerParam.setOutTradeNo(wwdActivityOrder.getOrderNo());
+        wxUnifiedOrderForInnerParam.setSpbillCreateIp(RequestUtils.getRemoteAddr(RequestUtils.getRequest()));
+        //附加参数
+        wxUnifiedOrderForInnerParam.setAttach(wwdActivityDto.getId());
+        String openid = (String) SecurityUtils.getSubject().getSession().getAttribute("publickplatform_openid_"+which);
+        // 如果没有openid只能重新授权
+        if(StringUtils.isEmpty(openid)){
+            resultData.setCode("wxopenid_no");
+            resultData.setMsg("wxopenid_no");
+            return new ResponseEntity(resultData,HttpStatus.NOT_FOUND);
+        }
+        wxUnifiedOrderForInnerParam.setOpenid(openid);
+        String fee = null;
+        if(DictEnum.Gender.male.name().equals(wwdUserDto.getGender())){
+            fee = wwdActivityDto.getMalePrice().toString();
+        }else if(DictEnum.Gender.female.name().equals(wwdUserDto.getGender())){
+            fee = wwdActivityDto.getFemalePrice().toString();
+        }
+        if(StringUtils.isEmpty(fee)){
+            resultData.setCode("fee_no");
+            resultData.setMsg("fee_no,make sure gender exist");
+            return new ResponseEntity(resultData,HttpStatus.NOT_FOUND);
+        }
+        wxUnifiedOrderForInnerParam.setTotalFee(fee);
+        wxUnifiedOrderForInnerParam.setNotifyUrl(notifyUrl);
+        wxUnifiedOrderForInnerParam.setDetail(StringUtils.trimToEmpty(desc));
+        Map<String,String> resData = apiWxPayForInnerService.unifiedOrder(wxUnifiedOrderForInnerParam,which);
+        // 查询订单信息
+
+        // 查询是否已支付
+        return returnDto(resData,resultData);
+    }
+
+    /**
+     * 查询当前登录用户订单状态
+     * @param id
+     * @param which
+     * @return
+     */
+    @RepeatFormValidator
+    @RequiresPermissions("wwd:activity:participate:get")
+    @RequestMapping(value = "/activity/{id}/participate", method = RequestMethod.GET)
+    public ResponseEntity orderGet(@PathVariable String id,String which) {
+        ResponseJsonRender resultData = new ResponseJsonRender();
+        // 查询活动信息
+        WwdActivityDto wwdActivityDto = apiWwdActivityService.selectByPrimaryKey(id);
+        if (wwdActivityDto == null) {
+            return super.returnDto(null, resultData);
+        }
+        WwdUserDto wwdUserDto = apiWwdUserPoService.selectByUserId(getLoginUser().getId());
+        // 查询是否已报名
+        // 查询参与信息
+        WwdParticipate wwdParticipate = null;
+        List<WwdParticipate> wwdParticipates = apiWwdParticipateService.selectByActivityIdAndWwdUserId(id, wwdUserDto.getId());
+        if (wwdParticipates != null) {
+            for (WwdParticipate participate : wwdParticipates) {
+                if(Constants.PayStatus.paid.name().equals(participate.getPayStatus()) || Constants.PayStatus.no_pay.name().equals(participate.getPayStatus())){
+                    wwdParticipate = participate;
+                    break;
+                }
+            }
+        }
+
+        return returnDto(wwdParticipate,resultData);
+    }
+    // 完成支付
+    @RequestMapping(value = "/activity/order/success", produces = {"application/xml;charset=UTF-8"})
+    public ResponseEntity unifiedOrder(@RequestBody String xml){
+        try {
+           Map<String,String> requestData =  WXPayUtil.xmlToMap(xml);
+           // 订单成功修改订单状态
+           if("SUCCESS".equals(requestData.get("result_code"))){
+
+               // 验证签名
+               String sign = requestData.get("sign");
+               MyWxPayConfig myWxPayConfig = new MyWxPayConfig();
+               String newsign = WXPayUtil.generateSignature(requestData, myWxPayConfig.getKey(), WXPayConstants.SignType.HMACSHA256); //签名
+               if(newsign.equals(sign)){
+
+                   // 设置订单已完成，
+                   WwdActivityOrder wwdActivityOrder = new WwdActivityOrder();
+                   wwdActivityOrder.setStatus(Constants.PayStatus.paid.name());
+                   WwdActivityOrder wwdActivityOrderCondition = new WwdActivityOrder();
+                   wwdActivityOrderCondition.setOrderNo(requestData.get("out_trade_no"));
+                   wwdActivityOrderCondition.setDelFlag(BasePo.YesNo.N.name());
+                   apiWwdActivityOrderService.updateSelective(wwdActivityOrder,wwdActivityOrderCondition);
+                   // 设置参与者支付结果已支付
+                   WwdActivityOrder wwdActivityOrderDb = apiWwdActivityOrderService.selectByOrderNo(requestData.get("out_trade_no"));
+                   WwdParticipate wwdParticipate = new WwdParticipate();
+                   wwdParticipate.setPayStatus(Constants.PayStatus.paid.name());
+                   wwdParticipate.setId(wwdActivityOrderDb.getParticipateId());
+                   apiWwdParticipateService.updateByPrimaryKeySelective(wwdParticipate);
+
+                   WwdParticipate wwdParticipateDb = apiWwdParticipateService.selectByPrimaryKeySimple(wwdActivityOrderDb.getParticipateId());
+                   WwdActivityDto wwdActivityDto = apiWwdActivityService.selectByPrimaryKey(wwdParticipateDb.getWwdActivityId());
+                   // 修改活动是否已满状态
+                   // 查询报名人数
+                   int headcount = apiWwdParticipateService.selectCountPaidParticipate(wwdParticipateDb.getWwdActivityId());
+                   // 报名人数已满
+                   if( headcount >= wwdActivityDto.getHeadcount()){
+                       WwdActivity wwdActivity = new WwdActivity();
+                       wwdActivity.setId(wwdActivityDto.getId());
+                       wwdActivity.setStatus(Constants.ActivityStatus.QUOTA_FULL.getCode());
+                       apiWwdActivityService.updateByPrimaryKeySelective(wwdActivity);
+                   }
+               }else {
+                   logger.error("sign error sign={},newsign={}",sign,newsign);
+               }
+
+           }
+        } catch (Exception e) {
+            logger.error(e.getMessage(),e);
+        }
+        Map<String,String> resultMap = new HashMap<>();
+        resultMap.put("return_code","SUCCESS");
+        resultMap.put("return_msg","OK");
+        String returnXml = null;
+        try {
+            returnXml = WXPayUtil.mapToXml(resultMap);
+        } catch (Exception e) {
+            logger.error(e.getMessage(),e);
+        }
+        return new ResponseEntity(returnXml, HttpStatus.OK);
+
     }
 }

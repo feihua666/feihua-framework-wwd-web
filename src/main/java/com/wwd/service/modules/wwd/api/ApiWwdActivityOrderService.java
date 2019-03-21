@@ -10,4 +10,8 @@ import feihua.jdbc.api.pojo.PageResultDto;
  */
 public interface ApiWwdActivityOrderService extends feihua.jdbc.api.service.ApiBaseService<WwdActivityOrder, WwdActivityOrderDto, String> {
     PageResultDto<WwdActivityOrderDto> searchWwdActivityOrdersDsf(com.wwd.service.modules.wwd.dto.SearchWwdActivityOrdersConditionDto dto, feihua.jdbc.api.pojo.PageAndOrderbyParamDto pageAndOrderbyParamDto);
+
+
+    WwdActivityOrder selectByParticipateIdAndUserId(String participateId,String userId);
+    WwdActivityOrder selectByOrderNo(String orderNo);
 }

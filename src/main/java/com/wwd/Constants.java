@@ -112,4 +112,27 @@ public class Constants {
             return null;
         }
     }
+
+    /**
+     * 支付状态
+     */
+    public enum PayStatus {
+        // 已支付
+        paid,
+        // 未支付
+        no_pay,
+        // 已退款
+        refund,
+        // 退款中
+        refunding
+    }
+    /**
+     * 支付方式
+     */
+    public enum PayType {
+        // 微信
+        wx,
+        // 支付宝
+        zfb
+    }
 }

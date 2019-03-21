@@ -1,12 +1,16 @@
 package com.wwd.service.impl;
 
 import com.github.pagehelper.Page;
+import com.wwd.Constants;
 import com.wwd.service.modules.wwd.api.ApiWwdParticipateService;
 import com.wwd.service.modules.wwd.dto.WwdParticipateDto;
 import com.wwd.service.modules.wwd.po.WwdParticipate;
+import feihua.jdbc.api.pojo.BasePo;
 import feihua.jdbc.api.pojo.PageResultDto;
 import feihua.jdbc.api.service.impl.ApiBaseServiceImpl;
 import java.util.List;
+
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -29,6 +33,39 @@ public class ApiWwdParticipateServiceImpl extends ApiBaseServiceImpl<WwdParticip
         List<com.wwd.service.modules.wwd.dto.WwdParticipateDto> list = this.wrapDtos(WwdParticipateMapper.searchWwdParticipates(dto));
         return new PageResultDto(list, this.wrapPage(p));
     }
+
+    @Override
+    public List<WwdParticipate> selectByActivityIdAndWwdUserId(String activityId, String wwdUserId) {
+        if(StringUtils.isAnyEmpty(activityId,wwdUserId)) return null;
+        WwdParticipate wwdParticipate = new WwdParticipate();
+        wwdParticipate.setWwdActivityId(activityId);
+        wwdParticipate.setWwdUserId(wwdUserId);
+        wwdParticipate.setDelFlag(BasePo.YesNo.N.name());
+        return selectListSimple(wwdParticipate);
+    }
+
+    @Override
+    public List<WwdParticipate> selectByActivityIdAndWwdUserIdAndParticipateStatus(String activityId, String wwdUserId, Constants.WwdParticipateStatus wwdParticipateStatus) {
+        if(StringUtils.isAnyEmpty(activityId,wwdUserId)) return null;
+        WwdParticipate wwdParticipate = new WwdParticipate();
+        wwdParticipate.setWwdActivityId(activityId);
+        wwdParticipate.setWwdUserId(wwdUserId);
+        wwdParticipate.setDelFlag(BasePo.YesNo.N.name());
+        wwdParticipate.setStatus(wwdParticipateStatus.getCode());
+        return selectListSimple(wwdParticipate);
+    }
+
+    @Override
+    public int selectCountPaidParticipate(String activityId) {
+        if(StringUtils.isEmpty(activityId))
+        return 0;
+        WwdParticipate wwdParticipate = new WwdParticipate();
+        wwdParticipate.setWwdActivityId(activityId);
+        wwdParticipate.setDelFlag(BasePo.YesNo.N.name());
+        wwdParticipate.setPayStatus(Constants.PayStatus.paid.name());
+        return count(wwdParticipate);
+    }
+
 
     @Override
     public WwdParticipateDto wrapDto(WwdParticipate po) {
