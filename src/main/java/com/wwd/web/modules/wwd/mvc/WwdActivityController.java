@@ -8,10 +8,8 @@ import com.feihua.utils.http.httpServletResponse.ResponseCode;
 import com.wwd.Constants;
 import com.wwd.service.modules.wwd.api.ApiWwdActivityService;
 import com.wwd.service.modules.wwd.api.ApiWwdParticipateService;
-import com.wwd.service.modules.wwd.dto.SearchWwdActivitysConditionDto;
-import com.wwd.service.modules.wwd.dto.SearchWwdParticipatesConditionDto;
-import com.wwd.service.modules.wwd.dto.WwdActivityDto;
-import com.wwd.service.modules.wwd.dto.WwdParticipateDto;
+import com.wwd.service.modules.wwd.api.ApiWwdUserPoService;
+import com.wwd.service.modules.wwd.dto.*;
 import com.wwd.service.modules.wwd.po.WwdActivity;
 import com.wwd.web.modules.wwd.dto.AddWwdActivity;
 import com.wwd.web.modules.wwd.dto.UpdateWwdActivity;
@@ -46,6 +44,9 @@ public class WwdActivityController extends BaseController {
 
     @Autowired
     private ApiWwdParticipateService apiWwdParticipateService;
+
+    @Autowired
+    private ApiWwdUserPoService apiWwdUserPoService;
 
     /**
      * 单资源，添加
@@ -303,6 +304,49 @@ public class WwdActivityController extends BaseController {
      * @return
      */
     @RepeatFormValidator
+    @RequiresPermissions("wwd:activity:myactivitys")
+    @RequestMapping(value = "/myActivitys", method = RequestMethod.GET)
+    public ResponseEntity myActivitys(SearchWwdActivitysConditionDto dto,boolean isParticipate) {
+        ResponseJsonRender resultData = new ResponseJsonRender();
+        PageAndOrderbyParamDto pageAndOrderbyParamDto = new PageAndOrderbyParamDto(PageUtils.getPageFromThreadLocal(), OrderbyUtils.getOrderbyFromThreadLocal());
+        // 设置当前登录用户id
+        dto.setCurrentUserId(getLoginUser().getId());
+        dto.setCurrentRoleId(((BaseRoleDto) getLoginUser().getRole()).getId());
+        if(isParticipate){
+            WwdUserDto wwdUserDto = apiWwdUserPoService.selectByUserId(getLoginUserId());
+            dto.setDataUserId(wwdUserDto.getId());
+        }
+
+        PageResultDto<WwdActivityDto> list = apiWwdActivityService.myActivitysMultiTable(dto, pageAndOrderbyParamDto);
+        List<WwdActivityDto> data = list.getData();
+        if (data != null && data.size() > 0) {
+            for (WwdActivityDto activityDto : data) {
+                SearchWwdParticipatesConditionDto query = new SearchWwdParticipatesConditionDto();
+                query.setStatusArr(new String[]{Constants.WwdParticipateStatus.NORMAL.getCode(), Constants.WwdParticipateStatus.ALTERNATE.getCode()});
+                query.setPayStatus(Constants.PayStatus.paid.name());
+                query.setWwdActivityId(activityDto.getId());
+                final PageResultDto<WwdParticipateDto> wwdParticipateDtoPageResultDto = apiWwdParticipateService.searchWwdParticipatesDsf(query, null);
+                activityDto.setWwdParticipateDtos(wwdParticipateDtoPageResultDto.getData());
+            }
+        }
+        if (CollectionUtils.isNotEmpty(list.getData())) {
+            resultData.setData(data);
+            resultData.setPage(list.getPage());
+            return new ResponseEntity(resultData, HttpStatus.OK);
+        } else {
+            resultData.setCode(ResponseCode.E404_100001.getCode());
+            resultData.setMsg(ResponseCode.E404_100001.getMsg());
+            return new ResponseEntity(resultData, HttpStatus.NOT_FOUND);
+        }
+    }
+
+    /**
+     * 复数资源，搜索汪汪队活动
+     *
+     * @param dto
+     * @return
+     */
+    @RepeatFormValidator
     @RequiresPermissions("wwd:activity:search")
     @RequestMapping(value = "/activitys", method = RequestMethod.GET)
     public ResponseEntity search(SearchWwdActivitysConditionDto dto) {
@@ -318,6 +362,7 @@ public class WwdActivityController extends BaseController {
                 SearchWwdParticipatesConditionDto query = new SearchWwdParticipatesConditionDto();
                 query.setStatusArr(new String[]{Constants.WwdParticipateStatus.NORMAL.getCode(), Constants.WwdParticipateStatus.ALTERNATE.getCode()});
                 query.setWwdActivityId(activityDto.getId());
+                query.setPayStatus(Constants.PayStatus.paid.name());
                 final PageResultDto<WwdParticipateDto> wwdParticipateDtoPageResultDto = apiWwdParticipateService.searchWwdParticipatesDsf(query, null);
                 activityDto.setWwdParticipateDtos(wwdParticipateDtoPageResultDto.getData());
             }

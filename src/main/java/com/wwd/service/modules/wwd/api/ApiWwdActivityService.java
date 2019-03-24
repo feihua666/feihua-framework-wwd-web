@@ -1,7 +1,9 @@
 package com.wwd.service.modules.wwd.api;
 
+import com.wwd.service.modules.wwd.dto.SearchWwdActivitysConditionDto;
 import com.wwd.service.modules.wwd.dto.WwdActivityDto;
 import com.wwd.service.modules.wwd.po.WwdActivity;
+import feihua.jdbc.api.pojo.PageAndOrderbyParamDto;
 import feihua.jdbc.api.pojo.PageResultDto;
 
 /**
@@ -10,4 +12,6 @@ import feihua.jdbc.api.pojo.PageResultDto;
  */
 public interface ApiWwdActivityService extends feihua.jdbc.api.service.ApiBaseService<WwdActivity, WwdActivityDto, String> {
     PageResultDto<WwdActivityDto> searchWwdActivitysDsf(com.wwd.service.modules.wwd.dto.SearchWwdActivitysConditionDto dto, feihua.jdbc.api.pojo.PageAndOrderbyParamDto pageAndOrderbyParamDto);
+
+	PageResultDto<WwdActivityDto> myActivitysMultiTable(SearchWwdActivitysConditionDto dto, PageAndOrderbyParamDto pageAndOrderbyParamDto);
 }

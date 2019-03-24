@@ -82,6 +82,11 @@
                         <value>com.wwd.service.mapper.BaseUserAccountPoMapper.searchUsersMultiTable</value>
                     </list>
                 </entry>
+                <entry key="com.wwd.service.mapper.WwdParticipateMapper">
+                    <list>
+                        <value>com.wwd.service.mapper.WwdActivityMapper.myActivitysMultiTable</value>
+                    </list>
+                </entry>
             </map>
         </property>
     </bean>

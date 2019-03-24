@@ -2,8 +2,10 @@ package com.wwd.service.impl;
 
 import com.github.pagehelper.Page;
 import com.wwd.service.modules.wwd.api.ApiWwdActivityService;
+import com.wwd.service.modules.wwd.dto.SearchWwdActivitysConditionDto;
 import com.wwd.service.modules.wwd.dto.WwdActivityDto;
 import com.wwd.service.modules.wwd.po.WwdActivity;
+import feihua.jdbc.api.pojo.PageAndOrderbyParamDto;
 import feihua.jdbc.api.pojo.PageResultDto;
 import feihua.jdbc.api.service.impl.ApiBaseServiceImpl;
 import java.util.List;
@@ -27,6 +29,13 @@ public class ApiWwdActivityServiceImpl extends ApiBaseServiceImpl<WwdActivity, W
     public PageResultDto<WwdActivityDto> searchWwdActivitysDsf(com.wwd.service.modules.wwd.dto.SearchWwdActivitysConditionDto dto, feihua.jdbc.api.pojo.PageAndOrderbyParamDto pageAndOrderbyParamDto) {
         Page p = super.pageAndOrderbyStart(pageAndOrderbyParamDto);
         List<com.wwd.service.modules.wwd.dto.WwdActivityDto> list = this.wrapDtos(WwdActivityMapper.searchWwdActivitys(dto));
+        return new PageResultDto(list, this.wrapPage(p));
+    }
+
+    @Override
+    public PageResultDto<WwdActivityDto> myActivitysMultiTable(SearchWwdActivitysConditionDto dto, PageAndOrderbyParamDto pageAndOrderbyParamDto) {
+        Page p = super.pageAndOrderbyStart(pageAndOrderbyParamDto);
+        List<com.wwd.service.modules.wwd.dto.WwdActivityDto> list = this.wrapDtos(WwdActivityMapper.myActivitysMultiTable(dto));
         return new PageResultDto(list, this.wrapPage(p));
     }
 
