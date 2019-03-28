@@ -1,5 +1,6 @@
 package com.wwd.service.modules.wwd.dto;
 
+import com.feihua.framework.base.modules.user.dto.BaseUserDto;
 import feihua.jdbc.api.pojo.BaseDbDto;
 import java.util.Date;
 
@@ -45,6 +46,34 @@ public class WwdParticipateDto extends BaseDbDto<String> {
     private Date updateAt;
 
     private String updateBy;
+
+    private WwdUserDto wwdUserDto;
+
+    private BaseUserDto baseUserDto;
+
+    public String getRemarks() {
+        return remarks;
+    }
+
+    public void setRemarks(String remarks) {
+        this.remarks = remarks;
+    }
+
+    public BaseUserDto getBaseUserDto() {
+        return baseUserDto;
+    }
+
+    public void setBaseUserDto(BaseUserDto baseUserDto) {
+        this.baseUserDto = baseUserDto;
+    }
+
+    public WwdUserDto getWwdUserDto() {
+        return wwdUserDto;
+    }
+
+    public void setWwdUserDto(WwdUserDto wwdUserDto) {
+        this.wwdUserDto = wwdUserDto;
+    }
 
     public String getId() {
         return id;
@@ -94,30 +123,6 @@ public class WwdParticipateDto extends BaseDbDto<String> {
         this.status = status;
     }
 
-    public String getRemarks() {
-        return remarks;
-    }
-
-    public void setRemarks(String remarks) {
-        this.remarks = remarks;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getMobile() {
-        return mobile;
-    }
-
-    public void setMobile(String mobile) {
-        this.mobile = mobile;
-    }
-
     public String getDataUserId() {
         return dataUserId;
     }
@@ -136,6 +141,22 @@ public class WwdParticipateDto extends BaseDbDto<String> {
 
     public String getDataType() {
         return dataType;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getMobile() {
+        return mobile;
+    }
+
+    public void setMobile(String mobile) {
+        this.mobile = mobile;
     }
 
     public void setDataType(String dataType) {

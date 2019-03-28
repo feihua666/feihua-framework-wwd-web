@@ -538,7 +538,7 @@ public class WwdUserController extends BaseController {
             }
         }
 
-        if(StringUtils.isEmpty(su.getId())){
+        else{
 
             // 添加wwduser
             WwdUserPo wwdUserPo = new WwdUserPo();

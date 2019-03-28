@@ -62,8 +62,8 @@ public class ApiWwdActivityOrderServiceImpl extends ApiBaseServiceImpl<WwdActivi
         dto.setActivityUrl(po.getActivityUrl());
         dto.setParticipateId(po.getParticipateId());
         dto.setUserId(po.getUserId());
-        dto.setType(po.getType());
-        dto.setStatus(po.getStatus());
+        dto.setPayType(po.getPayType());
+        dto.setPayStatus(po.getPayStatus());
         dto.setRemarks(po.getRemarks());
         dto.setDataUserId(po.getDataUserId());
         dto.setDataOfficeId(po.getDataOfficeId());

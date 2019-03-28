@@ -58,16 +58,7 @@
 
     <bean class="com.feihua.framework.shiro.service.DefaultCaptchaServiceImpl"></bean>
     <bean class="com.feihua.framework.shiro.service.DefaultQrCodeServiceImpl"></bean>
-    <!-- 阿里去oss -->
-    <bean id="aliOssClientHelper" class="com.feihua.framework.utils.AliOssClientHelper"  lazy-init="false" init-method="init"
-          destroy-method="destroy">
-        <property name="accessKeyId" value="${oss.accessKeyId}"/>
-        <property name="accessKeySecret" value="${oss.accessKeySecret}"/>
-        <property name="bucketName" value="${oss.bucketName}"/>
-        <property name="timeout" value="${oss.timeout}"/>
-        <property name="endpoint" value="${oss.endpoint}"/>
-        <property name="endpointInternal" value="${oss.endpointInternal}"/>
-    </bean>
+
     <bean class="com.feihua.framework.mybatis.orm.DefaultMybatisMapperConfig">
         <property name="basePackage" value="com.wwd.service.mapper"/>
         <property name="cacheConfig">
