@@ -68,6 +68,7 @@ public class ApiWwdActivityServiceImpl extends ApiBaseServiceImpl<WwdActivity, W
         dto.setDataAreaId(po.getDataAreaId());
         dto.setUpdateAt(po.getUpdateAt());
         dto.setContent(po.getContent());
+        dto.setRequireIdCard(po.getRequireIdCard());
         return dto;
     }
 }

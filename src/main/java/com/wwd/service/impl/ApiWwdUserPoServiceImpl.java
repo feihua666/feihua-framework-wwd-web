@@ -69,6 +69,8 @@ public class ApiWwdUserPoServiceImpl extends ApiBaseServiceImpl<WwdUserPo, WwdUs
         wwdUserDto.setGender(po.getGender());
         wwdUserDto.setId(po.getId());
         wwdUserDto.setMobile(po.getMobile());
+        wwdUserDto.setIdCardNo(po.getIdCardNo());
+        wwdUserDto.setIdType(po.getIdType());
         wwdUserDto.setSmoking(po.getSmoking());
         wwdUserDto.setShape(po.getShape());
         wwdUserDto.setDrinking(po.getDrinking());

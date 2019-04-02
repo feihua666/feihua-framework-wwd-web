@@ -28,6 +28,7 @@ public class AddWwdActivity {
     private Integer sequence;
 
     private String type;
+    private String requireIdCard;
 
     private String status;
 
@@ -297,5 +298,13 @@ public class AddWwdActivity {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public String getRequireIdCard() {
+        return requireIdCard;
+    }
+
+    public void setRequireIdCard(String requireIdCard) {
+        this.requireIdCard = requireIdCard;
     }
 }

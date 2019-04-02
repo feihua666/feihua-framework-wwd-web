@@ -73,6 +73,7 @@ public class WwdActivityController extends BaseController {
         basePo.setContact(dto.getContact());
         basePo.setSequence(dto.getSequence());
         basePo.setType(dto.getType());
+        basePo.setRequireIdCard(dto.getRequireIdCard());
         basePo.setStatus(dto.getStatus());
         basePo.setHeadcount(dto.getHeadcount());
         basePo.setHeadcountDesc(dto.getHeadcountDesc());
@@ -171,6 +172,7 @@ public class WwdActivityController extends BaseController {
         basePo.setContact(dto.getContact());
         basePo.setSequence(dto.getSequence());
         basePo.setType(dto.getType());
+        basePo.setRequireIdCard(dto.getRequireIdCard());
         basePo.setStatus(dto.getStatus());
         basePo.setHeadcount(dto.getHeadcount());
         basePo.setHeadcountDesc(dto.getHeadcountDesc());

@@ -85,6 +85,8 @@ public class ApiWwdParticipateServiceImpl extends ApiBaseServiceImpl<WwdParticip
         dto.setUpdateAt(po.getUpdateAt());
         dto.setName(po.getName());
         dto.setMobile(po.getMobile());
+        dto.setIdCardNo(po.getIdCardNo());
+        dto.setIdType(po.getIdType());
         return dto;
     }
 }

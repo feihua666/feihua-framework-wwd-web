@@ -29,6 +29,7 @@ public class UpdateWwdActivity extends UpdateFormDto {
     private Integer sequence;
 
     private String type;
+    private String requireIdCard;
 
     private String status;
 
@@ -298,5 +299,13 @@ public class UpdateWwdActivity extends UpdateFormDto {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public String getRequireIdCard() {
+        return requireIdCard;
+    }
+
+    public void setRequireIdCard(String requireIdCard) {
+        this.requireIdCard = requireIdCard;
     }
 }

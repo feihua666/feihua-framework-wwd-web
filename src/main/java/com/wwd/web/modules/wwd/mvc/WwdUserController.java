@@ -170,6 +170,8 @@ public class WwdUserController extends BaseController {
         basePo.setAcademic(updateFormDto.getAcademic());
         basePo.setGender(updateFormDto.getGender());
         basePo.setMobile(updateFormDto.getMobile());
+        basePo.setIdCardNo(updateFormDto.getIdCardNo());
+        basePo.setIdType(updateFormDto.getIdType());
         basePo.setSmoking(updateFormDto.getSmoking());
         basePo.setShape(updateFormDto.getShape());
         basePo.setDrinking(updateFormDto.getDrinking());

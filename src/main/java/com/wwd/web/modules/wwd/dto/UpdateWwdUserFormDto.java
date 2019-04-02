@@ -42,6 +42,8 @@ public class UpdateWwdUserFormDto extends UpdateFormDto {
     private String looks;
 
     private String mobile;
+    private String idCardNo;
+    private String idType;
 
     private String bloodType;
 
@@ -312,4 +314,19 @@ public class UpdateWwdUserFormDto extends UpdateFormDto {
         this.homeAreaIds = homeAreaIds;
     }
 
+    public String getIdCardNo() {
+        return idCardNo;
+    }
+
+    public void setIdCardNo(String idCardNo) {
+        this.idCardNo = idCardNo;
+    }
+
+    public String getIdType() {
+        return idType;
+    }
+
+    public void setIdType(String idType) {
+        this.idType = idType;
+    }
 }

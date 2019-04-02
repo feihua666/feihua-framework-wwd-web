@@ -16,6 +16,7 @@ import com.wwd.service.modules.wwd.dto.WwdActivityDto;
 import com.wwd.service.modules.wwd.dto.WwdParticipateDto;
 import com.wwd.service.modules.wwd.dto.WwdUserDto;
 import com.wwd.service.modules.wwd.po.WwdParticipate;
+import com.wwd.service.modules.wwd.po.WwdUserPo;
 import com.wwd.web.modules.wwd.dto.AddWwdParticipate;
 import com.wwd.web.modules.wwd.dto.UpdateWwdParticipate;
 import feihua.jdbc.api.pojo.BasePo;
@@ -24,6 +25,7 @@ import feihua.jdbc.api.pojo.PageResultDto;
 import feihua.jdbc.api.utils.OrderbyUtils;
 import feihua.jdbc.api.utils.PageUtils;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -265,7 +267,7 @@ public class WwdParticipateController extends BaseController {
     @RepeatFormValidator
     @RequiresPermissions("wwd:participate:participate")
     @RequestMapping(value = "/participate/user/current", method = RequestMethod.POST)
-    public ResponseEntity participate(String activityId,String name,String mobile) {
+    public ResponseEntity participate(String activityId,String name,String mobile,String idCardNo,String saveToInfo) {
         logger.info("报名活动开始");
         logger.info("当前登录用户id:{}", getLoginUser().getId());
         ResponseJsonRender resultData = new ResponseJsonRender();
@@ -324,6 +326,20 @@ public class WwdParticipateController extends BaseController {
             resultData.setCode("payStatus=paid");
             resultData.setMsg("payStatus=paid");
             return new ResponseEntity(resultData,HttpStatus.CONFLICT);
+        }
+        if (BasePo.YesNo.Y.name().equals(saveToInfo) && (StringUtils.isNotEmpty(name) || StringUtils.isNotEmpty(mobile) || StringUtils.isNotEmpty(idCardNo))) {
+            WwdUserPo wwdUserPo = new WwdUserPo();
+            wwdUserPo.setId(wwdUserDto.getId());
+            if(StringUtils.isNotEmpty(name)){
+                wwdUserPo.setName(name);
+            }
+            if(StringUtils.isNotEmpty(mobile)){
+                wwdUserPo.setMobile(mobile);
+            }
+            if(StringUtils.isNotEmpty(idCardNo)){
+                wwdUserPo.setIdCardNo(idCardNo);
+            }
+            apiWwdUserPoService.updateByPrimaryKeySelective(wwdUserPo);
         }
         return returnDto(wwdParticipate,resultData);
     }
