@@ -599,7 +599,7 @@ public class WwdUserController extends BaseController {
                     apiBaseUserRoleRelPoService.userBindRoles(userBindRolesParamDto);
 
                     // 清空用户权限缓存
-                    ShiroUtils.refreshAuthorizationInfoByUserId(su.getId());
+                    ShiroUtils.clearCachedAuthorizationInfo();
                 }
 
             }
