@@ -43,7 +43,6 @@ public class WwdPicController extends BaseController {
      * @param id wwd_user_id
      * @return
      */
-    @RepeatFormValidator
     @RequiresPermissions("wwd:user:pic:getById")
     @RequestMapping(value = "/user/{id}/pic",method = RequestMethod.GET)
     public ResponseEntity getPic(@PathVariable String id){
@@ -143,7 +142,6 @@ public class WwdPicController extends BaseController {
      * 单资源，获取当前用户图片
      * @return
      */
-    @RepeatFormValidator
     @RequiresPermissions("wwd:user:pic:current:getById")
     @RequestMapping(value = "/user/current/pic",method = RequestMethod.GET)
     public ResponseEntity getCurrentPic(){

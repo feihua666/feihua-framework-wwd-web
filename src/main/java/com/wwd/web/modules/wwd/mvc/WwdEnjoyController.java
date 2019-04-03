@@ -48,7 +48,6 @@ public class WwdEnjoyController extends BaseController {
      * 单资源，我是否对他有意思
      * @return
      */
-    @RepeatFormValidator
     @RequiresPermissions("wwd:user:current:enjoy:getById")
     @RequestMapping(value = "/user/current/enjoy/{enjoyedWwdUserId}",method = RequestMethod.GET)
     public ResponseEntity getEnjoy(@PathVariable String enjoyedWwdUserId){
@@ -101,7 +100,6 @@ public class WwdEnjoyController extends BaseController {
      * 单资源，我是否对他有意思
      * @return
      */
-    @RepeatFormValidator
     @RequiresPermissions("wwd:user:current:enjoys:get")
     @RequestMapping(value = "/user/current/enjoys/{status}",method = RequestMethod.GET)
     public ResponseEntity selectEnjoys(@PathVariable String status){

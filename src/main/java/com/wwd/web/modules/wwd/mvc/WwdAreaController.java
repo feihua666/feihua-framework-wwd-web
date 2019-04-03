@@ -36,7 +36,6 @@ public class WwdAreaController extends BaseController {
      * @param id wwd_user_id
      * @return
      */
-    @RepeatFormValidator
     @RequiresPermissions("wwd:user:area:getById")
     @RequestMapping(value = "/user/{id}/area",method = RequestMethod.GET)
     public ResponseEntity getArea(@PathVariable String id){
@@ -49,7 +48,6 @@ public class WwdAreaController extends BaseController {
      * 单资源，获取当前用户区域
      * @return
      */
-    @RepeatFormValidator
     @RequiresPermissions("wwd:user:area:current:getById")
     @RequestMapping(value = "/user/current/area",method = RequestMethod.GET)
     public ResponseEntity getCurrentUserArea(){

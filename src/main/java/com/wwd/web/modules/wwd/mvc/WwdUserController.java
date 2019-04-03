@@ -311,7 +311,6 @@ public class WwdUserController extends BaseController {
      * @param id
      * @return
      */
-    @RepeatFormValidator
     @RequiresPermissions("wwd:user:getById")
     @RequestMapping(value = "/user/{id}",method = RequestMethod.GET)
     public ResponseEntity getById(@PathVariable String id){
@@ -329,7 +328,6 @@ public class WwdUserController extends BaseController {
      * 单资源，获取当前用户
      * @return
      */
-    @RepeatFormValidator
     @RequiresPermissions("wwd:user:current:getById")
     @RequestMapping(value = "/user/current",method = RequestMethod.GET)
     public ResponseEntity getCurrentUserById(){
@@ -345,7 +343,6 @@ public class WwdUserController extends BaseController {
         resultData.addData("invitedDto",wwdUserInvitationDto);
         return super.returnDto(baseDataScopeDto,resultData);
     }
-    @RepeatFormValidator
     @RequiresPermissions("user")
     @RequestMapping(value = "/user/current/invited",method = RequestMethod.GET)
     public ResponseEntity getCurrentUserinvitedDto(){
@@ -367,7 +364,6 @@ public class WwdUserController extends BaseController {
      * @param id wwd_user_id
      * @return
      */
-    @RepeatFormValidator
     @RequiresPermissions("wwd:user:invitation:getById")
     @RequestMapping(value = "/user/{id}/invitation",method = RequestMethod.GET)
     public ResponseEntity getInvitationCode(@PathVariable String id){
@@ -380,7 +376,6 @@ public class WwdUserController extends BaseController {
      * 单资源，获取当前用户未使用的邀请码
      * @return
      */
-    @RepeatFormValidator
     @RequiresPermissions("wwd:user:invitation:current:getById")
     @RequestMapping(value = "/user/current/invitation",method = RequestMethod.GET)
     public ResponseEntity getCurrentUserInvitationCode(){
@@ -404,7 +399,6 @@ public class WwdUserController extends BaseController {
      * @param dto
      * @return
      */
-    @RepeatFormValidator
     @RequiresPermissions("wwd:user:search")
     @RequestMapping(value = "/users",method = RequestMethod.GET)
     public ResponseEntity search(SearchWwdUsersConditionDto dto,boolean includePic){
@@ -436,7 +430,6 @@ public class WwdUserController extends BaseController {
      * @param id wwd_user_id
      * @return
      */
-    @RepeatFormValidator
     @RequiresPermissions("wwd:user:wechatNumber:getById")
     @RequestMapping(value = "/user/{id}/wechatNumber",method = RequestMethod.GET)
     public ResponseEntity getWechatNumber(@PathVariable String id){
@@ -460,7 +453,6 @@ public class WwdUserController extends BaseController {
      *
      * @return
      */
-    @RepeatFormValidator
     @RequiresPermissions("wwd:user:myfriends")
     @RequestMapping(value = "/myfriends", method = RequestMethod.GET)
     public ResponseEntity myfriends() {

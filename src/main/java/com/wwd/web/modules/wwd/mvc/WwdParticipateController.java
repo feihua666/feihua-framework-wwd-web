@@ -204,7 +204,6 @@ public class WwdParticipateController extends BaseController {
      * @param id
      * @return
      */
-    @RepeatFormValidator
     @RequiresPermissions("wwd:participate:getById")
     @RequestMapping(value = "/participate/{id}", method = RequestMethod.GET)
     public ResponseEntity getById(@PathVariable String id) {
@@ -227,7 +226,6 @@ public class WwdParticipateController extends BaseController {
      * @param dto
      * @return
      */
-    @RepeatFormValidator
     @RequiresPermissions("wwd:participate:search")
     @RequestMapping(value = "/participates", method = RequestMethod.GET)
     public ResponseEntity search(SearchWwdParticipatesConditionDto dto) {

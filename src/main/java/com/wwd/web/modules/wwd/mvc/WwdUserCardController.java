@@ -187,7 +187,6 @@ public class WwdUserCardController extends BaseController {
      * @param id
      * @return
      */
-    @RepeatFormValidator
     @RequiresPermissions("wwd:user:card:getById")
     @RequestMapping(value = "/user/card/{id}",method = RequestMethod.GET)
     public ResponseEntity getById(@PathVariable String id){
@@ -209,7 +208,6 @@ public class WwdUserCardController extends BaseController {
      * @param dto
      * @return
      */
-    @RepeatFormValidator
     @RequiresPermissions("wwd:user:card:search")
     @RequestMapping(value = "/user/cards",method = RequestMethod.GET)
     public ResponseEntity search(SearchWwdUserCardsConditionDto dto){
@@ -269,7 +267,6 @@ public class WwdUserCardController extends BaseController {
 
      * @return
      */
-    @RepeatFormValidator
     @RequiresPermissions("user")
     @RequestMapping(value = "/user/current/card",method = RequestMethod.GET)
     public ResponseEntity getMyCard(String userId){

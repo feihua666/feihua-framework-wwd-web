@@ -122,7 +122,6 @@ public class WwdTagController extends BaseController {
      * @param id wwd_user_id
      * @return
      */
-    @RepeatFormValidator
     @RequiresPermissions("wwd:user:tags:getById")
     @RequestMapping(value = "/user/{id}/tags",method = RequestMethod.GET)
     public ResponseEntity getTag(@PathVariable String id){
@@ -136,7 +135,6 @@ public class WwdTagController extends BaseController {
      * 多资源，获取当前用户标签
      * @return
      */
-    @RepeatFormValidator
     @RequiresPermissions("wwd:user:tags:current:get")
     @RequestMapping(value = "/user/current/tags",method = RequestMethod.GET)
     public ResponseEntity getCurrentUserTags(){
@@ -151,7 +149,6 @@ public class WwdTagController extends BaseController {
      * 单资源，获取当前用户标签
      * @return
      */
-    @RepeatFormValidator
     @RequiresPermissions("wwd:user:tag:current:get")
     @RequestMapping(value = "/user/current/tag/{type}",method = RequestMethod.GET)
     public ResponseEntity getCurrentUserTag(@PathVariable String type){

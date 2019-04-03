@@ -285,7 +285,6 @@ public class WwdActivityController extends BaseController {
      * @param id
      * @return
      */
-    @RepeatFormValidator
     @RequiresPermissions("wwd:activity:getById")
     @RequestMapping(value = "/activity/{id}", method = RequestMethod.GET)
     public ResponseEntity getById(@PathVariable String id) {
@@ -308,7 +307,6 @@ public class WwdActivityController extends BaseController {
      * @param dto
      * @return
      */
-    @RepeatFormValidator
     @RequiresPermissions("wwd:activity:myactivitys")
     @RequestMapping(value = "/myActivitys", method = RequestMethod.GET)
     public ResponseEntity myActivitys(SearchWwdActivitysConditionDto dto,boolean isParticipate) {
@@ -351,7 +349,6 @@ public class WwdActivityController extends BaseController {
      * @param dto
      * @return
      */
-    @RepeatFormValidator
     @RequiresPermissions("wwd:activity:search")
     @RequestMapping(value = "/activitys", method = RequestMethod.GET)
     public ResponseEntity search(SearchWwdActivitysConditionDto dto) {
