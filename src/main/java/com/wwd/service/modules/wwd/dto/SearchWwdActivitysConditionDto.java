@@ -34,15 +34,19 @@ public class SearchWwdActivitysConditionDto extends BaseConditionDto {
 
     private String status;
 
+    private String requireIdCard;
+
     private Integer headcount;
+
+    private Integer headcountMale;
+
+    private Integer headcountFemale;
 
     private String headcountDesc;
 
     private String introduced;
 
-    private String payRule;
-
-    private Integer price;
+    private String headcountRule;
 
     private Integer malePrice;
 
@@ -73,6 +77,38 @@ public class SearchWwdActivitysConditionDto extends BaseConditionDto {
     private String[] statusArr;
 
     private String keyword;
+
+    public String getRequireIdCard() {
+        return requireIdCard;
+    }
+
+    public void setRequireIdCard(String requireIdCard) {
+        this.requireIdCard = requireIdCard;
+    }
+
+    public Integer getHeadcountMale() {
+        return headcountMale;
+    }
+
+    public void setHeadcountMale(Integer headcountMale) {
+        this.headcountMale = headcountMale;
+    }
+
+    public Integer getHeadcountFemale() {
+        return headcountFemale;
+    }
+
+    public void setHeadcountFemale(Integer headcountFemale) {
+        this.headcountFemale = headcountFemale;
+    }
+
+    public String getHeadcountRule() {
+        return headcountRule;
+    }
+
+    public void setHeadcountRule(String headcountRule) {
+        this.headcountRule = headcountRule;
+    }
 
     public String getHeadcountDesc() {
         return headcountDesc;
@@ -204,22 +240,6 @@ public class SearchWwdActivitysConditionDto extends BaseConditionDto {
 
     public void setIntroduced(String introduced) {
         this.introduced = introduced;
-    }
-
-    public String getPayRule() {
-        return payRule;
-    }
-
-    public void setPayRule(String payRule) {
-        this.payRule = payRule;
-    }
-
-    public Integer getPrice() {
-        return price;
-    }
-
-    public void setPrice(Integer price) {
-        this.price = price;
     }
 
     public Integer getMalePrice() {

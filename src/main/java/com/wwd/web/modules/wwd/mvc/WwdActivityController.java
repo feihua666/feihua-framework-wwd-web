@@ -76,10 +76,11 @@ public class WwdActivityController extends BaseController {
         basePo.setRequireIdCard(dto.getRequireIdCard());
         basePo.setStatus(dto.getStatus());
         basePo.setHeadcount(dto.getHeadcount());
+        basePo.setHeadcountMale(dto.getHeadcountMale());
+        basePo.setHeadcountFemale(dto.getHeadcountFemale());
         basePo.setHeadcountDesc(dto.getHeadcountDesc());
         basePo.setIntroduced(dto.getIntroduced());
-        basePo.setPayRule(dto.getPayRule());
-        basePo.setPrice(dto.getPrice());
+        basePo.setHeadcountRule(dto.getHeadcountRule());
         basePo.setMalePrice(dto.getMalePrice());
         basePo.setFemalePrice(dto.getFemalePrice());
         basePo.setActivityStatement(dto.getActivityStatement());
@@ -175,10 +176,11 @@ public class WwdActivityController extends BaseController {
         basePo.setRequireIdCard(dto.getRequireIdCard());
         basePo.setStatus(dto.getStatus());
         basePo.setHeadcount(dto.getHeadcount());
+        basePo.setHeadcountMale(dto.getHeadcountMale());
+        basePo.setHeadcountFemale(dto.getHeadcountFemale());
         basePo.setHeadcountDesc(dto.getHeadcountDesc());
         basePo.setIntroduced(dto.getIntroduced());
-        basePo.setPayRule(dto.getPayRule());
-        basePo.setPrice(dto.getPrice());
+        basePo.setHeadcountRule(dto.getHeadcountRule());
         basePo.setMalePrice(dto.getMalePrice());
         basePo.setFemalePrice(dto.getFemalePrice());
         basePo.setActivityStatement(dto.getActivityStatement());
@@ -246,10 +248,11 @@ public class WwdActivityController extends BaseController {
         basePo.setType(dto.getType());
         basePo.setStatus(Constants.ActivityStatus.EDIT.getCode());
         basePo.setHeadcount(dto.getHeadcount());
+        basePo.setHeadcountRule(dto.getHeadcountRule());
+        basePo.setHeadcountMale(dto.getHeadcountMale());
+        basePo.setHeadcountFemale(dto.getHeadcountFemale());
         basePo.setHeadcountDesc(dto.getHeadcountDesc());
         basePo.setIntroduced(dto.getIntroduced());
-        basePo.setPayRule(dto.getPayRule());
-        basePo.setPrice(dto.getPrice());
         basePo.setMalePrice(dto.getMalePrice());
         basePo.setFemalePrice(dto.getFemalePrice());
         basePo.setActivityStatement(dto.getActivityStatement());
@@ -288,7 +291,7 @@ public class WwdActivityController extends BaseController {
     public ResponseEntity getById(@PathVariable String id) {
 
         ResponseJsonRender resultData = new ResponseJsonRender();
-        WwdActivityDto baseDataScopeDto = apiWwdActivityService.selectByPrimaryKey(id, false);
+        WwdActivityDto baseDataScopeDto = apiWwdActivityService.selectByPrimaryKey(id);
         if (baseDataScopeDto != null) {
             resultData.setData(baseDataScopeDto);
             return new ResponseEntity(resultData, HttpStatus.OK);

@@ -54,11 +54,13 @@ public class ApiWwdActivityServiceImpl extends ApiBaseServiceImpl<WwdActivity, W
         dto.setSequence(po.getSequence());
         dto.setType(po.getType());
         dto.setStatus(po.getStatus());
+        dto.setRequireIdCard(po.getRequireIdCard());
         dto.setHeadcount(po.getHeadcount());
+        dto.setHeadcountRule(po.getHeadcountRule());
+        dto.setHeadcountMale(po.getHeadcountMale());
+        dto.setHeadcountFemale(po.getHeadcountFemale());
         dto.setHeadcountDesc(po.getHeadcountDesc());
         dto.setIntroduced(po.getIntroduced());
-        dto.setPayRule(po.getPayRule());
-        dto.setPrice(po.getPrice());
         dto.setMalePrice(po.getMalePrice());
         dto.setFemalePrice(po.getFemalePrice());
         dto.setActivityStatement(po.getActivityStatement());
@@ -68,7 +70,6 @@ public class ApiWwdActivityServiceImpl extends ApiBaseServiceImpl<WwdActivity, W
         dto.setDataAreaId(po.getDataAreaId());
         dto.setUpdateAt(po.getUpdateAt());
         dto.setContent(po.getContent());
-        dto.setRequireIdCard(po.getRequireIdCard());
         return dto;
     }
 }

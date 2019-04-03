@@ -34,13 +34,15 @@ public class AddWwdActivity {
 
     private Integer headcount;
 
+    private Integer headcountMale;
+
+    private Integer headcountFemale;
+
     private String headcountDesc;
 
     private String introduced;
 
-    private String payRule;
-
-    private Integer price;
+    private String headcountRule;
 
     private Integer malePrice;
 
@@ -180,20 +182,28 @@ public class AddWwdActivity {
         this.introduced = introduced;
     }
 
-    public String getPayRule() {
-        return payRule;
+    public Integer getHeadcountMale() {
+        return headcountMale;
     }
 
-    public void setPayRule(String payRule) {
-        this.payRule = payRule;
+    public void setHeadcountMale(Integer headcountMale) {
+        this.headcountMale = headcountMale;
     }
 
-    public Integer getPrice() {
-        return price;
+    public Integer getHeadcountFemale() {
+        return headcountFemale;
     }
 
-    public void setPrice(Integer price) {
-        this.price = price;
+    public void setHeadcountFemale(Integer headcountFemale) {
+        this.headcountFemale = headcountFemale;
+    }
+
+    public String getHeadcountRule() {
+        return headcountRule;
+    }
+
+    public void setHeadcountRule(String headcountRule) {
+        this.headcountRule = headcountRule;
     }
 
     public Integer getMalePrice() {
