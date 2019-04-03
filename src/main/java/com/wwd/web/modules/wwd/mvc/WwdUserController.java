@@ -545,14 +545,15 @@ public class WwdUserController extends BaseController {
             apiWwdUserPoService.preInsert(wwdUserPo,BasePo.DEFAULT_USER_ID);
             WwdUserDto wwdUserDto = apiWwdUserPoService.insertSelective(wwdUserPo);
             // 添加一个图片，默认以头像做为主图
-            WwdUserPicPo wwdUserPicPo = new WwdUserPicPo();
+            // update by yangwei 微信头像太模糊，不添加了
+            /*WwdUserPicPo wwdUserPicPo = new WwdUserPicPo();
             wwdUserPicPo.setWwdUserId(wwdUserDto.getId());
             wwdUserPicPo.setSequence(1);
             wwdUserPicPo.setType(Constants.WwdUserPicType.main.name());
             wwdUserPicPo.setPicOriginUrl(su.getPhoto());
             wwdUserPicPo.setPicThumbUrl(su.getPhoto());
             apiWwdUserPicPoService.preInsert(wwdUserPicPo,BasePo.DEFAULT_USER_ID);
-            apiWwdUserPicPoService.insertSelective(wwdUserPicPo);
+            apiWwdUserPicPoService.insertSelective(wwdUserPicPo);*/
 
 
 
@@ -593,6 +594,7 @@ public class WwdUserController extends BaseController {
                     apiBaseUserRoleRelPoService.userBindRoles(userBindRolesParamDto);
 
                     // 清空用户权限缓存
+                    ShiroUtils.refreshShiroUserInfoImidiately();
                     ShiroUtils.clearCachedAuthorizationInfo();
                 }
 

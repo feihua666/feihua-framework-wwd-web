@@ -42,8 +42,16 @@ public class UserAuthHelper {
         }
 
         // 如果已经存在直接返回
-        BaseUserAuthDto baseUserAuthDto = apiBaseUserAuthPoService.selectByUserIdAndType(weixinUserDto.getOpenid(),loginType);
+        BaseUserAuthDto baseUserAuthDto = apiBaseUserAuthPoService.selectByIdentifierAndType(weixinUserDto.getOpenid(),loginType);
         if (baseUserAuthDto != null) {
+            // 更新用户信息，头像昵称等
+            BaseUserPo baseUserPo = new BaseUserPo();
+            baseUserPo.setNickname(weixinUserDto.getNickname());
+            baseUserPo.setPhoto(weixinUserDto.getHeadImageUrl());
+            baseUserPo.setGender(CommonConstants.genderMapping.get(weixinUserDto.getGender()));
+            baseUserPo.setId(baseUserAuthDto.getUserId());
+            apiBaseUserPoService.updateByPrimaryKeySelective(baseUserPo);
+
             return apiBaseUserPoService.selectByPrimaryKeySimple(baseUserAuthDto.getUserId());
         }
 
