@@ -3,6 +3,7 @@ package com.wwd.web.modules.wwd.mvc;
 import com.feihua.framework.base.modules.role.dto.BaseRoleDto;
 import com.feihua.framework.base.modules.user.api.ApiBaseUserPoService;
 import com.feihua.framework.base.modules.user.dto.BaseUserDto;
+import com.feihua.framework.constants.DictEnum;
 import com.feihua.framework.rest.ResponseJsonRender;
 import com.feihua.framework.rest.interceptor.RepeatFormValidator;
 import com.feihua.framework.rest.modules.common.mvc.BaseController;
@@ -273,21 +274,44 @@ public class WwdParticipateController extends BaseController {
         ResponseJsonRender resultData = new ResponseJsonRender();
         // 查询活动信息
         WwdActivityDto wwdActivityDto = apiWwdActivityService.selectByPrimaryKey(activityId);
+
+
+        WwdUserDto wwdUserDto = apiWwdUserPoService.selectByUserId(getLoginUser().getId());
         if (wwdActivityDto == null) {
             return super.returnDto(null, resultData);
         }
-        if (!new Integer(0).equals(wwdActivityDto.getHeadcount())) {
-            // 查询报名人数
-            int headcount = apiWwdParticipateService.selectCountPaidParticipate(activityId);
+        if(Constants.HeadCountRule.unlimited.name().equals(wwdActivityDto.getHeadcountRule())){
+            if (!new Integer(0).equals(wwdActivityDto.getHeadcount())) {
+                // 查询报名人数
+                int headcount = apiWwdParticipateService.selectCountPaidParticipate(activityId);
+                // 报名人数已满
+                if( headcount >= wwdActivityDto.getHeadcount()){
+                    resultData.setCode("headcount=enough");
+                    resultData.setMsg("headcount=enough");
+                    return new ResponseEntity(resultData,HttpStatus.CONFLICT);
+                }
+            }
+        }else if(Constants.HeadCountRule.custom.name().equals(wwdActivityDto.getHeadcountRule())){
+            int headcountSex = apiWwdParticipateService.selectCountPaidParticipate(activityId,wwdUserDto.getGender());
+            int headcountGender = 0;
+            if(DictEnum.Gender.female.name().equals(wwdUserDto.getGender())){
+                headcountGender = wwdActivityDto.getHeadcountFemale();
+            }else if(DictEnum.Gender.male.name().equals(wwdUserDto.getGender())){
+                headcountGender = wwdActivityDto.getHeadcountMale();
+
+            }
             // 报名人数已满
-            if( headcount >= wwdActivityDto.getHeadcount()){
+            if( headcountSex >= headcountGender){
                 resultData.setCode("headcount=enough");
                 resultData.setMsg("headcount=enough");
                 return new ResponseEntity(resultData,HttpStatus.CONFLICT);
             }
+        }else{
+            resultData.setCode("headcountRule=invalie");
+            resultData.setMsg("headcountRule=invalie");
+            return new ResponseEntity(resultData,HttpStatus.CONFLICT);
         }
 
-        WwdUserDto wwdUserDto = apiWwdUserPoService.selectByUserId(getLoginUser().getId());
         // 查询是否已报名
         // 查询参与信息
         WwdParticipate wwdParticipate = null;
@@ -325,7 +349,7 @@ public class WwdParticipateController extends BaseController {
         if (Constants.PayStatus.paid.name().equals(wwdParticipate.getPayStatus())) {
             resultData.setCode("payStatus=paid");
             resultData.setMsg("payStatus=paid");
-            return new ResponseEntity(resultData,HttpStatus.CONFLICT);
+            return new ResponseEntity(resultData,HttpStatus.INTERNAL_SERVER_ERROR);
         }
         if (BasePo.YesNo.Y.name().equals(saveToInfo) && (StringUtils.isNotEmpty(name) || StringUtils.isNotEmpty(mobile) || StringUtils.isNotEmpty(idCardNo))) {
             WwdUserPo wwdUserPo = new WwdUserPo();

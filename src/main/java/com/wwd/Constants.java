@@ -135,4 +135,12 @@ public class Constants {
         // 支付宝
         zfb
     }
+
+    /**
+     * 报名人数规则
+     */
+    public enum HeadCountRule {
+        unlimited,      // 不限制男女
+        custom     //限制男女人数
+    }
 }

@@ -24,4 +24,5 @@ public interface ApiWwdParticipateService extends feihua.jdbc.api.service.ApiBas
      * @return
      */
     int selectCountPaidParticipate(String activityId);
+    int selectCountPaidParticipate(String activityId,String gender);
 }

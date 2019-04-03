@@ -2,12 +2,17 @@ package com.wwd.service.impl;
 
 import com.github.pagehelper.Page;
 import com.wwd.Constants;
+import com.wwd.service.mapper.WwdUserPoMapper;
 import com.wwd.service.modules.wwd.api.ApiWwdParticipateService;
+import com.wwd.service.modules.wwd.api.ApiWwdUserPoService;
 import com.wwd.service.modules.wwd.dto.WwdParticipateDto;
 import com.wwd.service.modules.wwd.po.WwdParticipate;
+import com.wwd.service.modules.wwd.po.WwdUserPo;
 import feihua.jdbc.api.pojo.BasePo;
 import feihua.jdbc.api.pojo.PageResultDto;
 import feihua.jdbc.api.service.impl.ApiBaseServiceImpl;
+
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -22,6 +27,9 @@ import org.springframework.stereotype.Service;
 public class ApiWwdParticipateServiceImpl extends ApiBaseServiceImpl<WwdParticipate, WwdParticipateDto, String> implements ApiWwdParticipateService {
     @Autowired
     com.wwd.service.mapper.WwdParticipateMapper WwdParticipateMapper;
+
+    @Autowired
+    WwdUserPoMapper wwdUserPoMapper;
 
     public ApiWwdParticipateServiceImpl() {
         super(WwdParticipateDto.class);
@@ -66,6 +74,36 @@ public class ApiWwdParticipateServiceImpl extends ApiBaseServiceImpl<WwdParticip
         return count(wwdParticipate);
     }
 
+    @Override
+    public int selectCountPaidParticipate(String activityId, String gender) {
+        if(StringUtils.isAnyEmpty(activityId, gender))
+            return 0;
+        WwdParticipate wwdParticipate = new WwdParticipate();
+        wwdParticipate.setWwdActivityId(activityId);
+        wwdParticipate.setDelFlag(BasePo.YesNo.N.name());
+        wwdParticipate.setPayStatus(Constants.PayStatus.paid.name());
+        List<WwdParticipate> list = selectListSimple(wwdParticipate);
+        List<String> wwdUserId = new ArrayList<>();
+        if(list != null && !list.isEmpty()){
+            for (WwdParticipate participate : list) {
+                wwdUserId.add(participate.getWwdUserId());
+            }
+        }
+
+        if(wwdUserId != null && !wwdUserId.isEmpty()){
+            List<WwdUserPo> wwdUserPos = wwdUserPoMapper.selectByPrimaryKeys(wwdUserId,false);
+            if(wwdUserPos != null){
+                int r= 0;
+                for (WwdUserPo wwdUserPo : wwdUserPos) {
+                    if(gender.equals(wwdUserPo.getGender())){
+                        r++;
+                    }
+                }
+                return r;
+            }
+        }
+        return 0;
+    }
 
     @Override
     public WwdParticipateDto wrapDto(WwdParticipate po) {
