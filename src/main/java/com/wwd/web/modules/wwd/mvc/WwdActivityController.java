@@ -19,6 +19,7 @@ import feihua.jdbc.api.pojo.PageResultDto;
 import feihua.jdbc.api.utils.OrderbyUtils;
 import feihua.jdbc.api.utils.PageUtils;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +36,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/wwd")
+@SuppressWarnings("all")
 public class WwdActivityController extends BaseController {
 
     private static Logger logger = LoggerFactory.getLogger(WwdActivityController.class);
@@ -96,7 +98,7 @@ public class WwdActivityController extends BaseController {
         basePo.setContent(dto.getContent());
 
         basePo = apiWwdActivityService.preInsert(basePo, getLoginUser().getId());
-        WwdActivityDto r = apiWwdActivityService.insert(basePo);
+        WwdActivityDto r = null; //apiWwdActivityService.insert(basePo);
         if (r == null) {
             // 添加失败
             resultData.setCode(ResponseCode.E404_100001.getCode());
@@ -275,6 +277,52 @@ public class WwdActivityController extends BaseController {
             // 更新成功，已被成功创建
             logger.info("复制的汪汪队活动id:{}", id);
             logger.info("复制汪汪队活动结束，成功");
+            return new ResponseEntity(resultData, HttpStatus.CREATED);
+        }
+    }
+
+
+    /**
+     * 单资源，修改状态
+     *
+     * @param id
+     * @param status
+     * @return
+     */
+    @RequiresPermissions("wwd:activity:edit:status")
+    @RequestMapping(value = "/activity/{id}/edit/{status}", method = RequestMethod.PUT)
+    public ResponseEntity editStatus(@PathVariable String id,@PathVariable String status) {
+        logger.info("汪汪队活动修改状态开始");
+        logger.info("当前登录用户id:{}", getLoginUser().getId());
+        logger.info("汪汪队活动id:{}", id);
+        ResponseJsonRender resultData = new ResponseJsonRender();
+
+        WwdActivity wwdActivity = apiWwdActivityService.selectByPrimaryKeySimple(id);
+        int r = 0;
+        if(StringUtils.isNotEmpty(status) && !wwdActivity.getStatus().equals(status)
+                && Constants.ActivityStatus.getEnumBy(status) != null ){
+            wwdActivity.setStatus(status);
+
+            // 用条件更新，乐观锁机制
+            WwdActivity basePoCondition = new WwdActivity();
+            basePoCondition.setId(id);
+            basePoCondition.setDelFlag(BasePo.YesNo.N.name());
+            basePoCondition.setUpdateAt(wwdActivity.getUpdateAt());
+            wwdActivity = apiWwdActivityService.preUpdate(wwdActivity, getLoginUser().getId());
+             r = apiWwdActivityService.updateSelective(wwdActivity, basePoCondition);
+        }
+
+        if (r <= 0) {
+            // 更新失败，资源不存在
+            resultData.setCode(ResponseCode.E404_100001.getCode());
+            resultData.setMsg(ResponseCode.E404_100001.getMsg());
+            logger.info("code:{},msg:{}", resultData.getCode(), resultData.getMsg());
+            logger.info("汪汪队活动修改状态结束，失败");
+            return new ResponseEntity(resultData, HttpStatus.NOT_FOUND);
+        } else {
+            // 更新成功，已被成功创建
+            logger.info("更新的汪汪队活动id:{}", id);
+            logger.info("汪汪队活动修改状态结束，成功");
             return new ResponseEntity(resultData, HttpStatus.CREATED);
         }
     }
