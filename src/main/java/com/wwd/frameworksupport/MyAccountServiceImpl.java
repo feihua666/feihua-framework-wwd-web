@@ -1,14 +1,11 @@
 package com.wwd.frameworksupport;
 
-import com.feihua.framework.base.modules.user.api.ApiBaseUserAuthPoService;
 import com.feihua.framework.base.modules.user.api.ApiBaseUserPoService;
 import com.feihua.framework.base.modules.user.dto.BaseUserAddParamDto;
 import com.feihua.framework.base.modules.user.dto.BaseUserAuthDto;
 import com.feihua.framework.base.modules.user.po.BaseUserPo;
 import com.feihua.framework.constants.DictEnum;
 import com.feihua.framework.rest.service.AccountServiceImpl;
-import com.feihua.framework.shiro.LoginClient;
-import com.feihua.framework.shiro.pojo.ShiroUser;
 import com.feihua.framework.shiro.pojo.token.WxMiniProgramToken;
 import com.feihua.framework.shiro.pojo.token.WxPlatformToken;
 import com.feihua.utils.properties.PropertiesUtils;
@@ -16,18 +13,14 @@ import com.feihua.wechat.ParamsDto;
 import com.feihua.wechat.miniprogram.api.ApiMiniProgramService;
 import com.feihua.wechat.miniprogram.dto.LoginCredentialsDto;
 import com.wwd.service.modules.wwd.api.ApiWwdUserPoService;
-import com.wwd.service.modules.wwd.dto.WwdUserDto;
 import feihua.jdbc.api.pojo.BasePo;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Created by yangwei
@@ -93,10 +86,8 @@ public class MyAccountServiceImpl extends AccountServiceImpl {
 
     @Override
     public boolean validateCaptchaWhenLogin(ServletRequest servletRequest, ServletResponse servletResponse) {
-        LoginClient loginClient = super.resolveLoginClient(servletRequest);
-        LoginClient pcLoginClient = new LoginClient();
-        pcLoginClient.setClientType(DictEnum.LoginClient.pc.name());
-        if(pcLoginClient.equals(loginClient)){
+        String loginClient = super.resolveLoginClient(servletRequest);
+        if(DictEnum.LoginClientType.pc.name().equals(loginClient)){
             return true;
         }
         return false;

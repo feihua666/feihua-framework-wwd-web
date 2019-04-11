@@ -6,7 +6,6 @@ import com.feihua.framework.base.modules.user.dto.BaseUserAuthDto;
 import com.feihua.framework.base.modules.user.po.BaseUserAuthPo;
 import com.feihua.framework.base.modules.user.po.BaseUserPo;
 import com.feihua.framework.constants.DictEnum;
-import com.feihua.framework.shiro.pojo.ShiroUser;
 import com.feihua.wechat.CommonConstants;
 import com.feihua.wechat.common.api.ApiWeixinUserPoService;
 import com.feihua.wechat.common.dto.WeixinUserDto;
@@ -34,9 +33,9 @@ public class UserAuthHelper {
 
 
         String loginType = null;
-        if(DictEnum.WeixinType.miniprogram.name().equals(weixinUserDto.getType())){
+        if(DictEnum.WxAccountType.weixin_miniprogram.name().equals(weixinUserDto.getType())){
             loginType = DictEnum.LoginType.WX_MINIPROGRAM.name();
-        }else if(DictEnum.WeixinType.publicplatform.name().equals(weixinUserDto.getType())){
+        }else if(DictEnum.WxAccountType.weixin_publicplatform.name().equals(weixinUserDto.getType())){
             loginType = DictEnum.LoginType.WX_PLATFORM.name();
 
         }
