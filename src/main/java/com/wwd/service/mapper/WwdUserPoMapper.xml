@@ -3365,7 +3365,7 @@
       and wua.now_district_id = #{nowDistrictId}
     </if>
 
-    ORDER BY wu.create_at desc
+    ORDER BY RAND(),wu.create_at desc
   </select>
 
 </mapper>
