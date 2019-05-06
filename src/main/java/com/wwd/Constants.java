@@ -1,5 +1,8 @@
 package com.wwd;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.ArrayUtils;
+
 /**
  * Created by yangwei
  * Created at 2018/7/24 19:13
@@ -119,21 +122,32 @@ public class Constants {
     public enum PayStatus {
         // 已支付
         paid,
+        // 线下支付
+        offline_pay,
         // 未支付
         no_pay,
         // 已退款
         refund,
         // 退款中
-        refunding
+        refunding;
+
+        public static boolean contains(String name){
+            try {
+                PayStatus.valueOf(name);
+            } catch (IllegalArgumentException e) {
+               return false;
+            }
+            return  true;
+        }
     }
     /**
      * 支付方式
      */
     public enum PayType {
-        // 微信
-        wx,
-        // 支付宝
-        zfb
+        // 线下支付
+        offline_pay,
+        // 线上支付
+        online_pay
     }
 
     /**

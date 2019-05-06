@@ -54,6 +54,8 @@ public class SearchWwdActivitysConditionDto extends BaseConditionDto {
 
     private String activityStatement;
 
+    private String payType;
+
     private String dataUserId;
 
     private String dataOfficeId;
@@ -77,6 +79,14 @@ public class SearchWwdActivitysConditionDto extends BaseConditionDto {
     private String[] statusArr;
 
     private String keyword;
+
+    public String getPayType() {
+        return payType;
+    }
+
+    public void setPayType(String payType) {
+        this.payType = payType;
+    }
 
     public String getRequireIdCard() {
         return requireIdCard;

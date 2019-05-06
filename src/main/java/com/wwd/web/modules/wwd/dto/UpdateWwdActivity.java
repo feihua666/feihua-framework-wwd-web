@@ -72,6 +72,16 @@ public class UpdateWwdActivity extends UpdateFormDto {
 
     private String content;
 
+    private String payType;
+
+    public String getPayType() {
+        return payType;
+    }
+
+    public void setPayType(String payType) {
+        this.payType = payType;
+    }
+
     public String getHeadcountDesc() {
         return headcountDesc;
     }

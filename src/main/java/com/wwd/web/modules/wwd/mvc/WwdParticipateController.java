@@ -256,113 +256,118 @@ public class WwdParticipateController extends BaseController {
         }
     }
 
-    /**
-     * 当前登录用户报名
-     * @param activityId
-     * @param name 报名人姓名
-     * @param mobile 报名人手机号
-     * @return
-     */
-    @RepeatFormValidator
-    @RequiresPermissions("wwd:participate:participate")
-    @RequestMapping(value = "/participate/user/current", method = RequestMethod.POST)
-    public ResponseEntity participate(String activityId,String name,String mobile,String idCardNo,String saveToInfo) {
-        logger.info("报名活动开始");
-        logger.info("当前登录用户id:{}", getLoginUser().getId());
-        ResponseJsonRender resultData = new ResponseJsonRender();
-        // 查询活动信息
-        WwdActivityDto wwdActivityDto = apiWwdActivityService.selectByPrimaryKey(activityId);
+	/**
+	 * 当前登录用户报名
+	 *
+	 * @param activityId
+	 * @param name       报名人姓名
+	 * @param mobile     报名人手机号
+	 * @return
+	 */
+	@RepeatFormValidator
+	@RequiresPermissions("wwd:participate:participate")
+	@RequestMapping(value = "/participate/user/current", method = RequestMethod.POST)
+	public ResponseEntity participate(String activityId, String name, String mobile, String idCardNo, String saveToInfo) {
+		logger.info("报名活动开始");
+		logger.info("当前登录用户id:{}", getLoginUser().getId());
+		ResponseJsonRender resultData = new ResponseJsonRender();
+		// 查询活动信息
+		WwdActivityDto wwdActivityDto = apiWwdActivityService.selectByPrimaryKey(activityId);
 
 
-        WwdUserDto wwdUserDto = apiWwdUserPoService.selectByUserId(getLoginUser().getId());
-        if (wwdActivityDto == null) {
-            return super.returnDto(null, resultData);
-        }
-        if(Constants.HeadCountRule.unlimited.name().equals(wwdActivityDto.getHeadcountRule())){
-            if (!new Integer(0).equals(wwdActivityDto.getHeadcount())) {
-                // 查询报名人数
-                int headcount = apiWwdParticipateService.selectCountPaidParticipate(activityId);
-                // 报名人数已满
-                if( headcount >= wwdActivityDto.getHeadcount()){
-                    resultData.setCode("headcount=enough");
-                    resultData.setMsg("headcount=enough");
-                    return new ResponseEntity(resultData,HttpStatus.CONFLICT);
-                }
-            }
-        }else if(Constants.HeadCountRule.custom.name().equals(wwdActivityDto.getHeadcountRule())){
-            int headcountSex = apiWwdParticipateService.selectCountPaidParticipate(activityId,wwdUserDto.getGender());
-            int headcountGender = 0;
-            if(DictEnum.Gender.female.name().equals(wwdUserDto.getGender())){
-                headcountGender = wwdActivityDto.getHeadcountFemale();
-            }else if(DictEnum.Gender.male.name().equals(wwdUserDto.getGender())){
-                headcountGender = wwdActivityDto.getHeadcountMale();
+		WwdUserDto wwdUserDto = apiWwdUserPoService.selectByUserId(getLoginUser().getId());
+		if (wwdActivityDto == null) {
+			return super.returnDto(null, resultData);
+		}
+		if (Constants.HeadCountRule.unlimited.name().equals(wwdActivityDto.getHeadcountRule())) {
+			if (!new Integer(0).equals(wwdActivityDto.getHeadcount())) {
+				// 查询报名人数
+				int headcount = apiWwdParticipateService.selectCountPaidParticipate(activityId);
+				// 报名人数已满
+				if (headcount >= wwdActivityDto.getHeadcount()) {
+					resultData.setCode("headcount=enough");
+					resultData.setMsg("headcount=enough");
+					return new ResponseEntity(resultData, HttpStatus.CONFLICT);
+				}
+			}
+		} else if (Constants.HeadCountRule.custom.name().equals(wwdActivityDto.getHeadcountRule())) {
+			int headcountSex = apiWwdParticipateService.selectCountPaidParticipate(activityId, wwdUserDto.getGender());
+			int headcountGender = 0;
+			if (DictEnum.Gender.female.name().equals(wwdUserDto.getGender())) {
+				headcountGender = wwdActivityDto.getHeadcountFemale();
+			} else if (DictEnum.Gender.male.name().equals(wwdUserDto.getGender())) {
+				headcountGender = wwdActivityDto.getHeadcountMale();
 
-            }
-            // 报名人数已满
-            if( headcountSex >= headcountGender){
-                resultData.setCode("headcount=enough");
-                resultData.setMsg("headcount=enough");
-                return new ResponseEntity(resultData,HttpStatus.CONFLICT);
-            }
-        }else{
-            resultData.setCode("headcountRule=invalie");
-            resultData.setMsg("headcountRule=invalie");
-            return new ResponseEntity(resultData,HttpStatus.CONFLICT);
-        }
+			}
+			// 报名人数已满
+			if (headcountSex >= headcountGender) {
+				resultData.setCode("headcount=enough");
+				resultData.setMsg("headcount=enough");
+				return new ResponseEntity(resultData, HttpStatus.CONFLICT);
+			}
+		} else {
+			resultData.setCode("headcountRule=invalie");
+			resultData.setMsg("headcountRule=invalie");
+			return new ResponseEntity(resultData, HttpStatus.CONFLICT);
+		}
 
-        // 查询是否已报名
-        // 查询参与信息
-        WwdParticipate wwdParticipate = null;
-        List<WwdParticipate> wwdParticipates = apiWwdParticipateService.selectByActivityIdAndWwdUserId(activityId, wwdUserDto.getId());
-        if(wwdParticipates != null){
-            for (WwdParticipate participate : wwdParticipates) {
-                if(Constants.PayStatus.paid.name().equals(participate.getPayStatus()) || Constants.PayStatus.no_pay.name().equals(participate.getPayStatus())){
-                    wwdParticipate = participate;
-                    break;
-                }
-            }
-        }
+		// 查询是否已报名
+		// 查询参与信息
+		WwdParticipate wwdParticipate = null;
+		List<WwdParticipate> wwdParticipates = apiWwdParticipateService.selectByActivityIdAndWwdUserId(activityId, wwdUserDto.getId());
+		if (wwdParticipates != null) {
+			for (WwdParticipate participate : wwdParticipates) {
+				if (Constants.PayStatus.paid.name().equals(participate.getPayStatus()) || Constants.PayStatus.no_pay.name().equals(participate.getPayStatus())
+						|| Constants.PayStatus.offline_pay.name().equals(participate.getPayStatus())) {
+					wwdParticipate = participate;
+					break;
+				}
+			}
+		}
 
-        // 如果没有参与信息，添加一条
-        if (wwdParticipate == null) {
-            WwdParticipate wwdParticipateBeInsert = new WwdParticipate();
-            wwdParticipateBeInsert.setWwdUserId(wwdUserDto.getId());
-            wwdParticipateBeInsert.setWwdActivityId(activityId);
-            wwdParticipateBeInsert.setName(name);
-            wwdParticipateBeInsert.setMobile(mobile);
-            // 未支付
-            wwdParticipateBeInsert.setPayStatus(Constants.PayStatus.no_pay.name());
-            wwdParticipateBeInsert.setType(BasePo.YesNo.N.name());
-            wwdParticipateBeInsert.setStatus(Constants.WwdParticipateStatus.NORMAL.getCode());
-            wwdParticipate = apiWwdParticipateService.preInsert(wwdParticipateBeInsert, getLoginUser().getId());
-            wwdParticipate = apiWwdParticipateService.insertSimple(wwdParticipate);
-        }else{
-            wwdParticipate.setName(name);
-            wwdParticipate.setMobile(mobile);
-            wwdParticipate = apiWwdParticipateService.preUpdate(wwdParticipate,getLoginUserId());
-            apiWwdParticipateService.updateByPrimaryKeySelective(wwdParticipate);
-        }
+		// 如果没有参与信息，添加一条
+		if (wwdParticipate == null) {
+			WwdParticipate wwdParticipateBeInsert = new WwdParticipate();
+			wwdParticipateBeInsert.setWwdUserId(wwdUserDto.getId());
+			wwdParticipateBeInsert.setWwdActivityId(activityId);
+			wwdParticipateBeInsert.setName(name);
+			wwdParticipateBeInsert.setMobile(mobile);
+			// 未支付
 
-        // 判断是否已支付,如果
-        if (Constants.PayStatus.paid.name().equals(wwdParticipate.getPayStatus())) {
-            resultData.setCode("payStatus=paid");
-            resultData.setMsg("payStatus=paid");
-            return new ResponseEntity(resultData,HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-        if (BasePo.YesNo.Y.name().equals(saveToInfo) && (StringUtils.isNotEmpty(name) || StringUtils.isNotEmpty(mobile) || StringUtils.isNotEmpty(idCardNo))) {
-            WwdUserPo wwdUserPo = new WwdUserPo();
-            wwdUserPo.setId(wwdUserDto.getId());
-            if(StringUtils.isNotEmpty(name)){
-                wwdUserPo.setName(name);
-            }
-            if(StringUtils.isNotEmpty(mobile)){
-                wwdUserPo.setMobile(mobile);
-            }
-            if(StringUtils.isNotEmpty(idCardNo)){
-                wwdUserPo.setIdCardNo(idCardNo);
-            }
-            apiWwdUserPoService.updateByPrimaryKeySelective(wwdUserPo);
-        }
-        return returnDto(wwdParticipate,resultData);
-    }
+			wwdParticipateBeInsert.setPayStatus(Constants.PayStatus.no_pay.name());
+			wwdParticipateBeInsert.setType(BasePo.YesNo.N.name());
+			wwdParticipateBeInsert.setStatus(Constants.WwdParticipateStatus.NORMAL.getCode());
+			wwdParticipate = apiWwdParticipateService.preInsert(wwdParticipateBeInsert, getLoginUser().getId());
+			wwdParticipate = apiWwdParticipateService.insertSimple(wwdParticipate);
+		} else {
+			wwdParticipate.setName(name);
+			wwdParticipate.setMobile(mobile);
+			wwdParticipate = apiWwdParticipateService.preUpdate(wwdParticipate, getLoginUserId());
+			apiWwdParticipateService.updateByPrimaryKeySelective(wwdParticipate);
+		}
+
+		// 判断是否已支付,如果
+		if (Constants.PayStatus.paid.name().equals(wwdParticipate.getPayStatus()) || Constants.PayStatus.offline_pay.name().equals(wwdParticipate.getPayStatus())) {
+			resultData.setCode("payStatus=paid");
+			resultData.setMsg("payStatus=paid");
+			return new ResponseEntity(resultData, HttpStatus.CONFLICT);
+		}
+
+		if (BasePo.YesNo.Y.name().equals(saveToInfo) && (StringUtils.isNotEmpty(name) || StringUtils.isNotEmpty(mobile) || StringUtils.isNotEmpty(idCardNo))) {
+			WwdUserPo wwdUserPo = new WwdUserPo();
+			wwdUserPo.setId(wwdUserDto.getId());
+			if (StringUtils.isNotEmpty(name)) {
+				wwdUserPo.setName(name);
+			}
+			if (StringUtils.isNotEmpty(mobile)) {
+				wwdUserPo.setMobile(mobile);
+			}
+			if (StringUtils.isNotEmpty(idCardNo)) {
+				wwdUserPo.setIdCardNo(idCardNo);
+			}
+			apiWwdUserPoService.updateByPrimaryKeySelective(wwdUserPo);
+		}
+
+		return returnDto(wwdParticipate, resultData);
+	}
 }

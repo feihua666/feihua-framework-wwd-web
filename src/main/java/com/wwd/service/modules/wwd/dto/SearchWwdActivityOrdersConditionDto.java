@@ -22,9 +22,9 @@ public class SearchWwdActivityOrdersConditionDto extends BaseConditionDto {
 
     private String userId;
 
-    private String type;
+    private String payType;
 
-    private String status;
+    private String payStatus;
 
     private String remarks;
 
@@ -104,20 +104,20 @@ public class SearchWwdActivityOrdersConditionDto extends BaseConditionDto {
         this.userId = userId;
     }
 
-    public String getType() {
-        return type;
+    public String getPayType() {
+        return payType;
     }
 
-    public void setType(String type) {
-        this.type = type;
+    public void setPayType(String payType) {
+        this.payType = payType;
     }
 
-    public String getStatus() {
-        return status;
+    public String getPayStatus() {
+        return payStatus;
     }
 
-    public void setStatus(String status) {
-        this.status = status;
+    public void setPayStatus(String payStatus) {
+        this.payStatus = payStatus;
     }
 
     public String getRemarks() {

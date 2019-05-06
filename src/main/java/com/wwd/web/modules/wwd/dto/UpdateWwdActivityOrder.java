@@ -22,9 +22,11 @@ public class UpdateWwdActivityOrder extends UpdateFormDto {
 
     private String userId;
 
-    private String type;
+    private String payType;
 
-    private String status;
+    private String payStatus;
+
+    private String price;
 
     private String remarks;
 
@@ -45,6 +47,14 @@ public class UpdateWwdActivityOrder extends UpdateFormDto {
     private Date updateAt;
 
     private String updateBy;
+
+    public String getPrice() {
+        return price;
+    }
+
+    public void setPrice(String price) {
+        this.price = price;
+    }
 
     public String getId() {
         return id;
@@ -94,20 +104,20 @@ public class UpdateWwdActivityOrder extends UpdateFormDto {
         this.userId = userId;
     }
 
-    public String getType() {
-        return type;
+    public String getPayType() {
+        return payType;
     }
 
-    public void setType(String type) {
-        this.type = type;
+    public void setPayType(String payType) {
+        this.payType = payType;
     }
 
-    public String getStatus() {
-        return status;
+    public String getPayStatus() {
+        return payStatus;
     }
 
-    public void setStatus(String status) {
-        this.status = status;
+    public void setPayStatus(String payStatus) {
+        this.payStatus = payStatus;
     }
 
     public String getRemarks() {

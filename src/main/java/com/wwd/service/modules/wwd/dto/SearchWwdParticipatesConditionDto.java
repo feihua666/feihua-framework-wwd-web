@@ -46,6 +46,9 @@ public class SearchWwdParticipatesConditionDto extends BaseConditionDto {
 
     private String[] statusArr;
 
+
+    private String[] payStatusArr;
+
     private String keyword;
 
     public String getRemarks() {
@@ -62,6 +65,17 @@ public class SearchWwdParticipatesConditionDto extends BaseConditionDto {
 
     public void setKeyword(String keyword) {
         this.keyword = keyword;
+    }
+
+    public String[] getPayStatusArr() {
+        if(StringUtils.isNotBlank(payStatus)){
+            return payStatus.split(",");
+        }
+        return payStatusArr;
+    }
+
+    public void setPayStatusArr(String[] payStatusArr) {
+        this.payStatusArr = payStatusArr;
     }
 
     public String[] getStatusArr() {

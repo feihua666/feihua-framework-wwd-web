@@ -27,6 +27,8 @@ public class WwdActivityOrderDto extends BaseDbDto<String> {
 
     private String payStatus;
 
+    private String price;
+
     private String remarks;
 
     private String dataUserId;
@@ -48,6 +50,14 @@ public class WwdActivityOrderDto extends BaseDbDto<String> {
     private String updateBy;
 
     private BaseUserDto baseUserDto;
+
+    public String getPrice() {
+        return price;
+    }
+
+    public void setPrice(String price) {
+        this.price = price;
+    }
 
     public BaseUserDto getBaseUserDto() {
         return baseUserDto;

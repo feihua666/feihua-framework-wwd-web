@@ -93,8 +93,8 @@ public class WwdActivityOrderController extends BaseController {
         basePo.setActivityUrl(dto.getActivityUrl());
         basePo.setParticipateId(dto.getParticipateId());
         basePo.setUserId(dto.getUserId());
-        basePo.setPayType(dto.getType());
-        basePo.setPayStatus(dto.getStatus());
+        basePo.setPayType(dto.getPayType());
+        basePo.setPayStatus(dto.getPayStatus());
         basePo.setRemarks(dto.getRemarks());
         basePo.setDataUserId(dto.getDataUserId());
         basePo.setDataOfficeId(dto.getDataOfficeId());
@@ -178,8 +178,8 @@ public class WwdActivityOrderController extends BaseController {
         basePo.setActivityUrl(dto.getActivityUrl());
         basePo.setParticipateId(dto.getParticipateId());
         basePo.setUserId(dto.getUserId());
-        basePo.setPayType(dto.getType());
-        basePo.setPayStatus(dto.getStatus());
+        basePo.setPayType(dto.getPayType());
+        basePo.setPayStatus(dto.getPayStatus());
         basePo.setRemarks(dto.getRemarks());
         basePo.setDataUserId(dto.getDataUserId());
         basePo.setDataOfficeId(dto.getDataOfficeId());
@@ -209,6 +209,54 @@ public class WwdActivityOrderController extends BaseController {
             // 更新成功，已被成功创建
             logger.info("更新的汪汪队活动订单id:{}",id);
             logger.info("更新汪汪队活动订单结束，成功");
+            return new ResponseEntity(resultData, HttpStatus.CREATED);
+        }
+    }
+
+
+    /**
+     * 单资源，更新
+     * @param id
+     * @param status
+     * @return
+     */
+    @RepeatFormValidator
+    @RequiresPermissions("wwd:activity:order:edit:status")
+    @RequestMapping(value = "/activity/order/{id}/edit/{status}",method = RequestMethod.PUT)
+    public ResponseEntity updateStatus(@PathVariable String id, @PathVariable String status){
+        logger.info("更新汪汪队活动订单状态开始");
+        logger.info("当前登录用户id:{}",getLoginUser().getId());
+        logger.info("汪汪队活动订单状态id:{}",id);
+        ResponseJsonRender resultData=new ResponseJsonRender();
+        // 表单值设置
+        WwdActivityOrder wwdActivityOrder = apiWwdActivityOrderService.selectByPrimaryKeySimple(id);
+        int r = 0;
+        if(StringUtils.isNotEmpty(status) && !wwdActivityOrder.getPayStatus().equals(status)
+                && Constants.PayStatus.contains(status)){
+            WwdActivityOrder basePo = new WwdActivityOrder();
+            // id
+            basePo.setId(id);
+            basePo.setPayStatus(status);
+
+            // 用条件更新，乐观锁机制
+            WwdActivityOrder basePoCondition = new WwdActivityOrder();
+            basePoCondition.setId(id);
+            basePoCondition.setDelFlag(BasePo.YesNo.N.name());
+            basePoCondition.setUpdateAt(wwdActivityOrder.getUpdateAt());
+            basePo = apiWwdActivityOrderService.preUpdate(basePo,getLoginUser().getId());
+            r = apiWwdActivityOrderService.updateSelective(basePo,basePoCondition);
+        }
+        if (r <= 0) {
+            // 更新失败，资源不存在
+            resultData.setCode(ResponseCode.E404_100001.getCode());
+            resultData.setMsg(ResponseCode.E404_100001.getMsg());
+            logger.info("code:{},msg:{}",resultData.getCode(),resultData.getMsg());
+            logger.info("更新汪汪队活动订单状态结束，失败");
+            return new ResponseEntity(resultData,HttpStatus.NOT_FOUND);
+        }else{
+            // 更新成功，已被成功创建
+            logger.info("更新的汪汪队活动订单状态id:{}",id);
+            logger.info("更新汪汪队活动订单状态结束，成功");
             return new ResponseEntity(resultData, HttpStatus.CREATED);
         }
     }
@@ -273,8 +321,8 @@ public class WwdActivityOrderController extends BaseController {
     /**
      * 报名并支付
      * 说明，参与信息和活动订单信息表中未支付和已支付状态一个人只能有一条数据，其它状态可以有多条
-     * @param participateId
-     * @param which
+     * @param participateId 参与ID
+     * @param which 公众号类型
      * @return
      */
     @RepeatFormValidator
@@ -339,8 +387,9 @@ public class WwdActivityOrderController extends BaseController {
             wwdActivityOrder1.setActivityTitle(wwdActivityDto.getTitle());
             wwdActivityOrder1.setActivityUrl(wwdActivityDto.getTitleUrl());
             wwdActivityOrder1.setPayStatus(Constants.PayStatus.no_pay.name());
-            wwdActivityOrder1.setPayType(Constants.PayType.wx.name());
+            wwdActivityOrder1.setPayType(Constants.PayType.online_pay.name());
             wwdActivityOrder1.setRemarks(fee);
+            wwdActivityOrder1.setPrice(fee);
             wwdActivityOrder1.setOrderNo("HD" + CalendarUtils.dateToString(new Date(), CalendarUtils.DateStyle.YYYYMMDDHHMMSS) + RandomStringUtils.randomNumeric(6));
             wwdActivityOrder = apiWwdActivityOrderService.preInsert(wwdActivityOrder1,getLoginUserId());
             wwdActivityOrder = apiWwdActivityOrderService.insertSimple(wwdActivityOrder);
@@ -371,6 +420,90 @@ public class WwdActivityOrderController extends BaseController {
         return returnDto(resData,resultData);
     }
 
+
+    /**
+     * 线下支付报名生成订单
+     * 说明，参与信息和活动订单信息表中未支付和已支付状态一个人只能有一条数据，其它状态可以有多条
+     * @param participateId 参与ID
+     * @return
+     */
+    @RepeatFormValidator
+    @RequiresPermissions("wwd:activity:order:offlineOrder")
+    @RequestMapping(value = "/activity/participate/offlineOrder", method = RequestMethod.POST)
+    public ResponseEntity offlineOrder( String participateId) {
+
+        ResponseJsonRender resultData = new ResponseJsonRender();
+
+
+        WwdParticipate wwdParticipate = apiWwdParticipateService.selectByPrimaryKeySimple(participateId);
+        WwdActivityDto wwdActivityDto = apiWwdActivityService.selectByPrimaryKey(wwdParticipate.getWwdActivityId());
+        WwdUserDto wwdUserDto = apiWwdUserPoService.selectByUserId(getLoginUser().getId());
+        String fee = null;
+        if(DictEnum.Gender.male.name().equals(wwdUserDto.getGender())){
+            fee = wwdActivityDto.getMalePrice().toString();
+        }else if(DictEnum.Gender.female.name().equals(wwdUserDto.getGender())){
+            fee = wwdActivityDto.getFemalePrice().toString();
+        }
+        if(StringUtils.isEmpty(fee)){
+            resultData.setCode("fee_no");
+            resultData.setMsg("fee_no,make sure gender exist");
+            return new ResponseEntity(resultData,HttpStatus.NOT_FOUND);
+        }
+        // 判断是否已满
+        if(Constants.HeadCountRule.unlimited.name().equals(wwdActivityDto.getHeadcountRule())){
+            if (!new Integer(0).equals(wwdActivityDto.getHeadcount())) {
+                // 查询报名人数
+                int headcount = apiWwdParticipateService.selectCountPaidParticipate(wwdActivityDto.getId());
+                // 报名人数已满
+                if( headcount >= wwdActivityDto.getHeadcount()){
+                    resultData.setCode("headcount=enough");
+                    resultData.setMsg("headcount=enough");
+                    return new ResponseEntity(resultData,HttpStatus.CONFLICT);
+                }
+            }
+        }else if(Constants.HeadCountRule.custom.name().equals(wwdActivityDto.getHeadcountRule())){
+            int headcountSex = apiWwdParticipateService.selectCountPaidParticipate(wwdActivityDto.getId(),wwdUserDto.getGender());
+            int headcountGender = 0;
+            if(DictEnum.Gender.female.name().equals(wwdUserDto.getGender())){
+                headcountGender = wwdActivityDto.getHeadcountFemale();
+            }else if(DictEnum.Gender.male.name().equals(wwdUserDto.getGender())){
+                headcountGender = wwdActivityDto.getHeadcountMale();
+
+            }
+            // 报名人数已满
+            if( headcountSex >= headcountGender){
+                resultData.setCode("headcount=enough");
+                resultData.setMsg("headcount=enough");
+                return new ResponseEntity(resultData,HttpStatus.CONFLICT);
+            }
+        }
+
+        // 判断订单是否已支付
+        // 查询订单
+        WwdActivityOrder wwdActivityOrder = apiWwdActivityOrderService.selectByParticipateIdAndUserId(participateId,getLoginUserId());
+        // 如果订单信息不存在，添加一条
+        if(wwdActivityOrder == null){
+            WwdActivityOrder wwdActivityOrder1 = new WwdActivityOrder();
+            wwdActivityOrder1.setUserId(getLoginUserId());
+            wwdActivityOrder1.setParticipateId(participateId);
+            wwdActivityOrder1.setActivityTitle(wwdActivityDto.getTitle());
+            wwdActivityOrder1.setActivityUrl(wwdActivityDto.getTitleUrl());
+            wwdActivityOrder1.setPayStatus(Constants.PayStatus.no_pay.name());
+            wwdActivityOrder1.setPayType(Constants.PayType.offline_pay.name());
+            wwdActivityOrder1.setRemarks(fee);
+            wwdActivityOrder1.setPrice(fee);
+            wwdActivityOrder1.setOrderNo("HD" + CalendarUtils.dateToString(new Date(), CalendarUtils.DateStyle.YYYYMMDDHHMMSS) + RandomStringUtils.randomNumeric(6));
+            wwdActivityOrder = apiWwdActivityOrderService.preInsert(wwdActivityOrder1,getLoginUserId());
+            wwdActivityOrder = apiWwdActivityOrderService.insertSimple(wwdActivityOrder);
+        }
+        WwdParticipate wwdParticipateUpdate = new WwdParticipate();
+        wwdParticipateUpdate.setId(wwdParticipate.getId());
+        wwdParticipateUpdate.setPayStatus(Constants.PayStatus.offline_pay.name());
+        apiWwdParticipateService.updateByPrimaryKeySelective(wwdParticipateUpdate);
+
+        // 查询是否已支付
+        return returnDto(wwdActivityOrder,resultData);
+    }
     /**
      * 查询当前登录用户订单状态
      * @param id
@@ -394,7 +527,7 @@ public class WwdActivityOrderController extends BaseController {
         List<WwdParticipate> wwdParticipates = apiWwdParticipateService.selectByActivityIdAndWwdUserId(id, wwdUserDto.getId());
         if (wwdParticipates != null) {
             for (WwdParticipate participate : wwdParticipates) {
-                if(Constants.PayStatus.paid.name().equals(participate.getPayStatus()) || Constants.PayStatus.no_pay.name().equals(participate.getPayStatus())){
+                if(Constants.PayStatus.offline_pay.name().equals(participate.getPayStatus()) ||Constants.PayStatus.paid.name().equals(participate.getPayStatus()) || Constants.PayStatus.no_pay.name().equals(participate.getPayStatus())){
                     wwdParticipate = participate;
                     break;
                 }

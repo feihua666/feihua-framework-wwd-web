@@ -96,9 +96,10 @@ public class WwdActivityController extends BaseController {
         basePo.setUpdateAt(dto.getUpdateAt());
         basePo.setUpdateBy(dto.getUpdateBy());
         basePo.setContent(dto.getContent());
+        basePo.setPayType(dto.getPayType());
 
         basePo = apiWwdActivityService.preInsert(basePo, getLoginUser().getId());
-        WwdActivityDto r = null; //apiWwdActivityService.insert(basePo);
+        WwdActivityDto r = apiWwdActivityService.insert(basePo);
         if (r == null) {
             // 添加失败
             resultData.setCode(ResponseCode.E404_100001.getCode());
@@ -196,7 +197,7 @@ public class WwdActivityController extends BaseController {
         basePo.setUpdateAt(dto.getUpdateAt());
         basePo.setUpdateBy(dto.getUpdateBy());
         basePo.setContent(dto.getContent());
-
+        basePo.setPayType(dto.getPayType());
         // 用条件更新，乐观锁机制
         WwdActivity basePoCondition = new WwdActivity();
         basePoCondition.setId(id);
@@ -263,7 +264,8 @@ public class WwdActivityController extends BaseController {
         basePo.setDataType(dto.getDataType());
         basePo.setDataAreaId(dto.getDataAreaId());
         basePo.setContent(dto.getContent());
-
+        basePo.setRequireIdCard(dto.getRequireIdCard());
+        basePo.setPayType(dto.getPayType());
         basePo = apiWwdActivityService.preInsert(basePo, getLoginUser().getId());
         WwdActivityDto r = apiWwdActivityService.insert(basePo);
         if (r == null) {
@@ -374,7 +376,8 @@ public class WwdActivityController extends BaseController {
             for (WwdActivityDto activityDto : data) {
                 SearchWwdParticipatesConditionDto query = new SearchWwdParticipatesConditionDto();
                 query.setStatusArr(new String[]{Constants.WwdParticipateStatus.NORMAL.getCode(), Constants.WwdParticipateStatus.ALTERNATE.getCode()});
-                query.setPayStatus(Constants.PayStatus.paid.name());
+                query.setPayStatusArr(new String[]{Constants.PayStatus.paid.name(),Constants.PayStatus.offline_pay.name()});
+
                 query.setWwdActivityId(activityDto.getId());
                 final PageResultDto<WwdParticipateDto> wwdParticipateDtoPageResultDto = apiWwdParticipateService.searchWwdParticipatesDsf(query, null);
                 activityDto.setWwdParticipateDtos(wwdParticipateDtoPageResultDto.getData());
@@ -412,7 +415,7 @@ public class WwdActivityController extends BaseController {
                 SearchWwdParticipatesConditionDto query = new SearchWwdParticipatesConditionDto();
                 query.setStatusArr(new String[]{Constants.WwdParticipateStatus.NORMAL.getCode(), Constants.WwdParticipateStatus.ALTERNATE.getCode()});
                 query.setWwdActivityId(activityDto.getId());
-                query.setPayStatus(Constants.PayStatus.paid.name());
+                query.setPayStatusArr(new String[]{Constants.PayStatus.paid.name(),Constants.PayStatus.offline_pay.name()});
                 final PageResultDto<WwdParticipateDto> wwdParticipateDtoPageResultDto = apiWwdParticipateService.searchWwdParticipatesDsf(query, null);
                 activityDto.setWwdParticipateDtos(wwdParticipateDtoPageResultDto.getData());
             }

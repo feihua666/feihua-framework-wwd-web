@@ -1754,7 +1754,13 @@
     <if test="entity.statusArr != null and entity.statusArr.length>0">
       and
       <foreach close=")" collection="entity.statusArr" index="index" item="item" open="(" separator="or">
-        status = #{item,jdbcType=CHAR}
+        status = #{item,jdbcType=VARCHAR}
+      </foreach>
+    </if>
+    <if test="entity.payStatusArr != null and entity.payStatusArr.length>0">
+      and
+      <foreach close=")" collection="entity.payStatusArr" index="index" item="item" open="(" separator="or">
+        pay_status = #{item,jdbcType=VARCHAR}
       </foreach>
     </if>
     <if test="entity.wwdActivityId != null and entity.wwdActivityId != ''">
@@ -1765,9 +1771,6 @@
     </if>
     <if test="entity.type != null and entity.type != ''">
       and type = #{entity.type,jdbcType=VARCHAR}
-    </if>
-    <if test="entity.payStatus != null and entity.payStatus != ''">
-      and pay_status = #{entity.payStatus,jdbcType=VARCHAR}
     </if>
     <if test="entity.dataUserId != null and entity.dataUserId != ''">
       and DATA_USER_ID = #{entity.dataUserId,jdbcType=VARCHAR}

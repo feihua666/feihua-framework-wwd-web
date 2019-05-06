@@ -5,6 +5,7 @@ import com.wwd.Constants;
 import com.wwd.service.mapper.WwdUserPoMapper;
 import com.wwd.service.modules.wwd.api.ApiWwdParticipateService;
 import com.wwd.service.modules.wwd.api.ApiWwdUserPoService;
+import com.wwd.service.modules.wwd.dto.SearchWwdParticipatesConditionDto;
 import com.wwd.service.modules.wwd.dto.WwdParticipateDto;
 import com.wwd.service.modules.wwd.po.WwdParticipate;
 import com.wwd.service.modules.wwd.po.WwdUserPo;
@@ -67,25 +68,25 @@ public class ApiWwdParticipateServiceImpl extends ApiBaseServiceImpl<WwdParticip
     public int selectCountPaidParticipate(String activityId) {
         if(StringUtils.isEmpty(activityId))
         return 0;
-        WwdParticipate wwdParticipate = new WwdParticipate();
-        wwdParticipate.setWwdActivityId(activityId);
-        wwdParticipate.setDelFlag(BasePo.YesNo.N.name());
-        wwdParticipate.setPayStatus(Constants.PayStatus.paid.name());
-        return count(wwdParticipate);
+        SearchWwdParticipatesConditionDto dto = new SearchWwdParticipatesConditionDto();
+        dto.setWwdActivityId(activityId);
+        dto.setPayStatusArr(new String[]{Constants.PayStatus.paid.name(),Constants.PayStatus.offline_pay.name()});
+        List<WwdParticipate> wwdParticipates = WwdParticipateMapper.searchWwdParticipates(dto);
+        return wwdParticipates == null? 0:wwdParticipates.size();
     }
 
     @Override
     public int selectCountPaidParticipate(String activityId, String gender) {
         if(StringUtils.isAnyEmpty(activityId, gender))
             return 0;
-        WwdParticipate wwdParticipate = new WwdParticipate();
-        wwdParticipate.setWwdActivityId(activityId);
-        wwdParticipate.setDelFlag(BasePo.YesNo.N.name());
-        wwdParticipate.setPayStatus(Constants.PayStatus.paid.name());
-        List<WwdParticipate> list = selectListSimple(wwdParticipate);
+		SearchWwdParticipatesConditionDto dto = new SearchWwdParticipatesConditionDto();
+		dto.setWwdActivityId(activityId);
+		dto.setPayStatusArr(new String[]{Constants.PayStatus.paid.name(),Constants.PayStatus.offline_pay.name()});
+		List<WwdParticipate> wwdParticipates = WwdParticipateMapper.searchWwdParticipates(dto);
+
         List<String> wwdUserId = new ArrayList<>();
-        if(list != null && !list.isEmpty()){
-            for (WwdParticipate participate : list) {
+        if(wwdParticipates != null && !wwdParticipates.isEmpty()){
+            for (WwdParticipate participate : wwdParticipates) {
                 wwdUserId.add(participate.getWwdUserId());
             }
         }
@@ -121,6 +122,7 @@ public class ApiWwdParticipateServiceImpl extends ApiBaseServiceImpl<WwdParticip
         dto.setDataType(po.getDataType());
         dto.setDataAreaId(po.getDataAreaId());
         dto.setUpdateAt(po.getUpdateAt());
+        dto.setCreateAt(po.getCreateAt());
         dto.setName(po.getName());
         dto.setMobile(po.getMobile());
         dto.setIdCardNo(po.getIdCardNo());
