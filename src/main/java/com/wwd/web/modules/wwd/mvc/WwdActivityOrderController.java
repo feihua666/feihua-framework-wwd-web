@@ -507,13 +507,11 @@ public class WwdActivityOrderController extends BaseController {
     /**
      * 查询当前登录用户订单状态
      * @param id
-     * @param which
      * @return
      */
-    @RepeatFormValidator
     @RequiresPermissions("wwd:activity:participate:get")
     @RequestMapping(value = "/activity/{id}/participate", method = RequestMethod.GET)
-    public ResponseEntity orderGet(@PathVariable String id,String which) {
+    public ResponseEntity orderGet(@PathVariable String id) {
         ResponseJsonRender resultData = new ResponseJsonRender();
         // 查询活动信息
         WwdActivityDto wwdActivityDto = apiWwdActivityService.selectByPrimaryKey(id);
@@ -523,7 +521,7 @@ public class WwdActivityOrderController extends BaseController {
         WwdUserDto wwdUserDto = apiWwdUserPoService.selectByUserId(getLoginUser().getId());
         // 查询是否已报名
         // 查询参与信息
-        WwdParticipate wwdParticipate = null;
+        WwdParticipate wwdParticipate = new WwdParticipate();
         List<WwdParticipate> wwdParticipates = apiWwdParticipateService.selectByActivityIdAndWwdUserId(id, wwdUserDto.getId());
         if (wwdParticipates != null) {
             for (WwdParticipate participate : wwdParticipates) {
