@@ -248,6 +248,14 @@ public class WwdUserController extends BaseController {
         apiWwdUserAreaPoService.preUpdate(wwdUserAreaPo,getLoginUserId());
         apiWwdUserAreaPoService.updateByPrimaryKeySelective(wwdUserAreaPo);
 
+        // 更新用户
+        BaseUserPo baseUserPo = new BaseUserPo();
+        baseUserPo.setNickname(basePo.getNickname());
+        baseUserPo.setGender(basePo.getGender());
+        baseUserPo.setId(basePo.getUserId());
+        baseUserPo.setDataAreaId(wwdUserAreaPo.getNowDistrictId());
+        apiBaseUserPoService.updateByPrimaryKeySelective(baseUserPo);
+
         if (r <= 0) {
             // 更新失败，资源不存在
             resultData.setCode(ResponseCode.E404_100001.getCode());

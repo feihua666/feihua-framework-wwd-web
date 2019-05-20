@@ -1,7 +1,5 @@
 package com.wwd.frameworksupport;
 
-import com.feihua.framework.constants.DictEnum;
-import com.feihua.framework.shiro.pojo.ShiroUser;
 import com.feihua.wechat.common.api.ApiWeixinUserListener;
 import com.feihua.wechat.common.dto.WeixinUserDto;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,13 +17,13 @@ public class ApiWeixinUserListenerImpl implements ApiWeixinUserListener{
     @Autowired
     private UserAuthHelper UserAuthHelper;
     @Override
-    public void onAddWexinUser(WeixinUserDto weixinUserDto) {
-        UserAuthHelper.generateUserAuth(weixinUserDto);
+    public void onAddWexinUser(WeixinUserDto weixinUserDto,String fromClientId) {
+        UserAuthHelper.generateUserAuth(weixinUserDto,fromClientId);
     }
 
     @Override
-    public void onUpdateWexinUser(WeixinUserDto weixinUserDto) {
-        UserAuthHelper.generateUserAuth(weixinUserDto);
+    public void onUpdateWexinUser(WeixinUserDto weixinUserDto,String fromClientId) {
+        UserAuthHelper.generateUserAuth(weixinUserDto,null);
     }
 
 }

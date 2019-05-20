@@ -11,6 +11,7 @@ import com.feihua.wechat.common.api.ApiWeixinUserPoService;
 import com.feihua.wechat.common.dto.WeixinUserDto;
 import com.feihua.wechat.common.po.WeixinUserPo;
 import feihua.jdbc.api.pojo.BasePo;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -29,7 +30,7 @@ public class UserAuthHelper {
     @Autowired
     private ApiWeixinUserPoService apiWeixinUserPoService;
 
-    public BaseUserPo generateUserAuth(WeixinUserDto weixinUserDto) {
+    public BaseUserPo generateUserAuth(WeixinUserDto weixinUserDto,String fromClientId) {
 
 
         String loginType = null;
@@ -49,6 +50,12 @@ public class UserAuthHelper {
             baseUserPo.setPhoto(weixinUserDto.getHeadImageUrl());
             baseUserPo.setGender(CommonConstants.genderMapping.get(weixinUserDto.getGender()));
             baseUserPo.setId(baseUserAuthDto.getUserId());
+            if (StringUtils.isNotEmpty(fromClientId)){
+                BaseUserPo userPo = apiBaseUserPoService.selectByPrimaryKeySimple(baseUserAuthDto.getUserId());
+                if (userPo != null && StringUtils.isEmpty(userPo.getFromClientId())) {
+                    baseUserPo.setFromClientId(fromClientId);
+                }
+            }
             apiBaseUserPoService.updateByPrimaryKeySelective(baseUserPo);
 
             return apiBaseUserPoService.selectByPrimaryKeySimple(baseUserAuthDto.getUserId());
@@ -60,6 +67,7 @@ public class UserAuthHelper {
         baseUserPo.setPhoto(weixinUserDto.getHeadImageUrl());
         baseUserPo.setLocked(BasePo.YesNo.N.name());
         baseUserPo.setGender(CommonConstants.genderMapping.get(weixinUserDto.getGender()));
+        baseUserPo.setFromClientId(fromClientId);
         apiBaseUserPoService.preInsert(baseUserPo,BasePo.DEFAULT_USER_ID);
         baseUserPo = apiBaseUserPoService.insertSimple(baseUserPo);
 

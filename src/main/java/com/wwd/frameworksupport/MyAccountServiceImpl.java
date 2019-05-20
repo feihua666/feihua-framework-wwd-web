@@ -14,6 +14,8 @@ import com.feihua.wechat.miniprogram.api.ApiMiniProgramService;
 import com.feihua.wechat.miniprogram.dto.LoginCredentialsDto;
 import com.wwd.service.modules.wwd.api.ApiWwdUserPoService;
 import feihua.jdbc.api.pojo.BasePo;
+import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -75,7 +77,10 @@ public class MyAccountServiceImpl extends AccountServiceImpl {
             case WX_PLATFORM:
                 String which = servletRequest.getParameter("type");
                 // 该key是提前放好的，请调用相关接口获取openid，并设置该key
-                String openid = (String) SecurityUtils.getSubject().getSession().getAttribute("publickplatform_openid_"+which);
+                String openid = servletRequest.getParameter("openid");
+                if(StringUtils.isEmpty(openid)){
+                    openid = (String) SecurityUtils.getSubject().getSession().getAttribute("publickplatform_openid_" + which);
+                }
                 WxPlatformToken wxPlatformToken = new WxPlatformToken();
                 wxPlatformToken.setOpenid(openid);
                 token = wxPlatformToken;

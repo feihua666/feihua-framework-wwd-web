@@ -12,7 +12,7 @@
 		http://www.springframework.org/schema/context
 		http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd http://www.ctrip.com/schema/apollo http://www.ctrip.com/schema/apollo.xsd"
 >
-    <apollo:config namespaces="jdbc-default,alioss,redis,shiro,uploadfile"/>
+    <apollo:config namespaces="jdbc-default,redis,shiro,scheduler"/>
     <!-- 定义扫描的包路径 -->
     <context:component-scan  use-default-filters="false" base-package="com.wwd.service.impl,com.wwd.frameworksupport">
         <context:include-filter type="annotation" expression="org.springframework.stereotype.Service"/>
@@ -30,7 +30,16 @@
     <import resource="classpath:applicationContext-service.xml"/>
     <!-- 微信相关，不用可以不添加 -->
     <import resource="classpath:applicationContext-wechat-service.xml"/>
-
+    <!--添加工作流支持-->
+    <import resource="classpath:applicationContext-activity-service.xml"/>
+    <!--消息支持-->
+    <import resource="classpath:applicationContext-message-service.xml"/>
+    <!--cms支持-->
+    <import resource="classpath:applicationContext-cms-service.xml"/>
+    <!-- spider 支持 -->
+    <import resource="classpath:applicationContext-spider-service.xml"/>
+    <import resource="classpath:applicationContext-scheduler-service.xml"/>
+    <import resource="classpath:applicationContext-statistic-service.xml"/>
 
     <!-- 以下是配置文件引用 -->
 <!--    <bean class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">

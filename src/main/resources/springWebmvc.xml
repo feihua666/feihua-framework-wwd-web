@@ -22,5 +22,10 @@
     <import resource="classpath:springWebmvc-base-rest.xml"/>
     <!-- 微信相关，不用可以不添加 -->
     <import resource="classpath:springWebmvc-wechat-rest.xml"/>
-
+    <import resource="classpath:springWebmvc-activity-rest.xml"/>
+    <import resource="classpath:springWebmvc-message-rest.xml"/>
+    <import resource="classpath:springWebmvc-cms-web.xml"/>
+    <import resource="classpath:springWebmvc-spider-rest.xml"/>
+    <import resource="classpath:springWebmvc-scheduler-rest.xml"/>
+    <import resource="classpath:springWebmvc-statistic-rest.xml"/>
 </beans>

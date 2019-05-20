@@ -8,13 +8,18 @@ import com.feihua.utils.graphic.ImageUtils;
 import com.feihua.utils.http.httpServletRequest.RequestUtils;
 import com.feihua.utils.http.httpclient.HttpClientUtils;
 import com.feihua.utils.io.StreamUtils;
+import com.feihua.wechat.publicplatform.PublicUtils;
+import com.feihua.wechat.publicplatform.dto.QrCodeTicketDto;
 import com.github.pagehelper.Page;
+import com.google.zxing.WriterException;
 import com.wwd.service.modules.wwd.api.*;
 import com.wwd.service.modules.wwd.dto.*;
 import com.wwd.service.modules.wwd.po.WwdUserCardPo;
+import com.wwd.service.modules.wwd.po.WwdUserParamQrcodePo;
 import feihua.jdbc.api.pojo.BasePo;
 import feihua.jdbc.api.pojo.PageResultDto;
 import feihua.jdbc.api.service.impl.ApiBaseServiceImpl;
+import feihua.jdbc.api.utils.OrderbyUtils;
 import net.coobird.thumbnailator.Thumbnails;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpResponse;
@@ -55,6 +60,8 @@ public class ApiWwdUserCardPoServiceImpl extends ApiBaseServiceImpl<WwdUserCardP
     private ApiWwdUserPicPoService apiWwdUserPicPoService;
     @Autowired
     private ApiWwdUserAreaPoService apiWwdUserAreaPoService;
+    @Autowired
+    private ApiWwdUserParamQrcodePoService apiWwdUserParamQrcodePoService;
 
     public ApiWwdUserCardPoServiceImpl() {
         super(WwdUserCardDto.class);
@@ -68,17 +75,17 @@ public class ApiWwdUserCardPoServiceImpl extends ApiBaseServiceImpl<WwdUserCardP
     }
 
     @Override
-    public WwdUserCardPo generateCard(String userId) {
-
+    public WwdUserCardPo generateCard(String userId,String sceneStr,String which,String currentUserId) {
         WwdUserDto wwdUserDto = apiWwdUserPoService.selectByUserId(userId);
-
         if (wwdUserDto == null) {
-
             return null;
         }else {
-
             // 获取图片
-            List<WwdUserPicDto> userPicDtos = apiWwdUserPicPoService.selectByWwdUserId(wwdUserDto.getId());
+            Map<String,Object> ordery = new HashMap<>();
+            ordery.put("orderby","create_at");
+            ordery.put("orderable","true");
+
+            List<WwdUserPicDto> userPicDtos = apiWwdUserPicPoService.selectByWwdUserId(wwdUserDto.getId(),OrderbyUtils.getOrderbyFromMap(ordery));
             Map<String, String> userPicMap = new HashMap<>();
             if (userPicDtos != null) {
                 int putIndex = 1;
@@ -99,40 +106,41 @@ public class ApiWwdUserCardPoServiceImpl extends ApiBaseServiceImpl<WwdUserCardP
             Color textColor = null;
             if (DictEnum.Gender.female.name().equals(wwdUserDto.getGender())) {
                 bgPath = wwdcardbgPath + File.separator + "female.png";
-
                 textColor = new Color(0, 0, 0);
             } else {
-                textColor = new Color(255, 255, 255);
+                textColor = new Color(0, 0, 0);
                 bgPath = wwdcardbgPath + File.separator + "male.png";
             }
-
             try {
                 BufferedImage bgImage = ImageUtils.createImage(bgPath);
-
-
                 // 添加图片
                 // 主图
                 String mainUrl = userPicMap.get("main");
                 if (StringUtils.isNotEmpty(mainUrl)) {
                     BufferedImage pressImg = ImageUtils.inputStreamToBufferedImage(download(mainUrl));
-                    int width = 280;
-                    if (pressImg.getWidth() > width) {
-                        pressImg = Thumbnails.of(pressImg).scale((new Double(width)).doubleValue() / (double) pressImg.getWidth()).asBufferedImage();
+                    if (pressImg != null) {
+                        int width = 280;
+                        if (pressImg.getWidth() > width) {
+                            pressImg = Thumbnails.of(pressImg).scale((new Double(width)).doubleValue() / (double) pressImg.getWidth()).asBufferedImage();
+                        }
+                        int height = 310;
+                        if (pressImg.getHeight() > height) {
+                            pressImg = ImageUtils.cutImage(pressImg, 0, (pressImg.getHeight() - height) / 2, pressImg.getWidth(), height);
+                        }
+                        ImageUtils.pressImage(bgImage, pressImg, 400, 150, 1.0f);
                     }
-                    int height = 310;
-                    if (pressImg.getHeight() > height) {
-                        pressImg = ImageUtils.cutImage(pressImg, 0, (pressImg.getHeight() - height) / 2, pressImg.getWidth(), height);
-                    }
-                    ImageUtils.pressImage(bgImage, pressImg, 400, 150, 1.0f);
                 }
                 // 小图
-                int imgY = 615;
+                int imgY = 675;
                 int imgX = 90;
                 int height = 270;
                 for (int i = 0; i < 3; i++) {
                     String url = userPicMap.get(i + 1 + "");
                     if (StringUtils.isNotEmpty(url)) {
                         BufferedImage pressImg = ImageUtils.inputStreamToBufferedImage(download(url));
+                        if (pressImg == null) {
+                            continue;
+                        }
                         int width = 200;
                         if (pressImg.getWidth() > width) {
 
@@ -146,20 +154,28 @@ public class ApiWwdUserCardPoServiceImpl extends ApiBaseServiceImpl<WwdUserCardP
                     }
                 }
 
-
                 WwdUserAreaDto userAreaDto = apiWwdUserAreaPoService.selectByWwdUserId(wwdUserDto.getId());
                 String now = "";
                 String home = "";
                 if (userAreaDto != null) {
-                    now = userAreaDto.getNowProvinceName() + " " + userAreaDto.getNowDistrictName();
-                    home = userAreaDto.getHomeProvinceName() + " " + userAreaDto.getHomeCityName();
+                    now = StringUtils.stripToEmpty(userAreaDto.getNowProvinceName()) + " " + StringUtils.stripToEmpty(userAreaDto.getNowDistrictName());
+                    home = StringUtils.stripToEmpty(userAreaDto.getHomeProvinceName()) + " " + StringUtils.stripToEmpty(userAreaDto.getHomeCityName());
                 }
                 List<WwdUserTagDto> userTagDtos = apiWwdUserTagPoService.selectByWwdUserId(wwdUserDto.getId());
                 String hobbyType = "";
                 if (userTagDtos != null) {
                     for (WwdUserTagDto userTagDto : userTagDtos) {
                         if ("hobby_type".equals(userTagDto.getType())) {
-                            hobbyType = userTagDto.getContent();
+                            String content = StringUtils.stripToEmpty(userTagDto.getContent());
+                            if (StringUtils.isNotEmpty(content)){
+                                for (String item : content.split(",")) {
+                                    String label = apiBaseDictPoService.selectDictLabel("hobby_type", item);
+                                    if (StringUtils.isEmpty(label)){
+                                        label = item;
+                                    }
+                                    hobbyType += label + " ";
+                                }
+                            }
                         }
                     }
                 }
@@ -172,35 +188,34 @@ public class ApiWwdUserCardPoServiceImpl extends ApiBaseServiceImpl<WwdUserCardP
                 int lineHeight = 30;
                 bgImage = ImageUtils.pressText(bgImage, "个人介绍", "宋体", Font.BOLD, textColor, titleFontSize, x_center, y, 1);
                 y = 120;
-                bgImage = ImageUtils.pressText(bgImage, "昵称/微信：" + wwdUserDto.getName(), "宋体", Font.BOLD, textColor, textFontSize, x, y, 1);
+                bgImage = ImageUtils.pressText(bgImage, "昵称/微信：" + StringUtils.stripToEmpty(wwdUserDto.getName()), "宋体", Font.BOLD, textColor, textFontSize, x, y, 1);
                 y += lineHeight;
-                bgImage = ImageUtils.pressText(bgImage, "性别：" + apiBaseDictPoService.selectDictLabel("gender", wwdUserDto.getGender()), "宋体", Font.BOLD, textColor, textFontSize, x, y, 1);
+                bgImage = ImageUtils.pressText(bgImage, "性别：" + StringUtils.stripToEmpty(apiBaseDictPoService.selectDictLabel("gender", wwdUserDto.getGender())), "宋体", Font.BOLD, textColor, textFontSize, x, y, 1);
                 y += lineHeight;
-                bgImage = ImageUtils.pressText(bgImage, "身高：" + wwdUserDto.getHeight(), "宋体", Font.BOLD, textColor, textFontSize, x, y, 1);
+                bgImage = ImageUtils.pressText(bgImage, "身高：" + StringUtils.stripToEmpty(wwdUserDto.getHeight()), "宋体", Font.BOLD, textColor, textFontSize, x, y, 1);
                 y += lineHeight;
-                bgImage = ImageUtils.pressText(bgImage, "体重：" + wwdUserDto.getWeight(), "宋体", Font.BOLD, textColor, textFontSize, x, y, 1);
-
+                bgImage = ImageUtils.pressText(bgImage, "体重：" + StringUtils.stripToEmpty(wwdUserDto.getWeight()), "宋体", Font.BOLD, textColor, textFontSize, x, y, 1);
                 y += lineHeight;
-                bgImage = ImageUtils.pressText(bgImage, "婚姻：" + apiBaseDictPoService.selectDictLabel("married_status", wwdUserDto.getMaritalStatus()), "宋体", Font.BOLD, textColor, textFontSize, x, y, 1);
+                bgImage = ImageUtils.pressText(bgImage, "婚姻：" + StringUtils.stripToEmpty(apiBaseDictPoService.selectDictLabel("married_status", wwdUserDto.getMaritalStatus())), "宋体", Font.BOLD, textColor, textFontSize, x, y, 1);
                 y += lineHeight;
                 bgImage = ImageUtils.pressText(bgImage, "家乡在：" + home, "宋体", Font.BOLD, textColor, textFontSize, x, y, 1);
                 y += lineHeight;
                 bgImage = ImageUtils.pressText(bgImage, "目前在：" + now, "宋体", Font.BOLD, textColor, textFontSize, x, y, 1);
                 y += lineHeight;
-                bgImage = ImageUtils.pressText(bgImage, "生日：" + CalendarUtils.dateToString(wwdUserDto.getBirthDay()), "宋体", Font.BOLD, textColor, textFontSize, x, y, 1);
+                bgImage = ImageUtils.pressText(bgImage, "生日：" + StringUtils.stripToEmpty(CalendarUtils.dateToString(wwdUserDto.getBirthDay())), "宋体", Font.BOLD, textColor, textFontSize, x, y, 1);
                 y += lineHeight;
-                bgImage = ImageUtils.pressText(bgImage, "学历：" + apiBaseDictPoService.selectDictLabel("education_level", wwdUserDto.getEducation()), "宋体", Font.BOLD, textColor, textFontSize, x, y, 1);
+                bgImage = ImageUtils.pressText(bgImage, "学历：" + StringUtils.stripToEmpty(apiBaseDictPoService.selectDictLabel("education_level", wwdUserDto.getEducation())), "宋体", Font.BOLD, textColor, textFontSize, x, y, 1);
                 y += lineHeight;
-                bgImage = ImageUtils.pressText(bgImage, "房：" + apiBaseDictPoService.selectDictLabel("has_hourse_status", wwdUserDto.getHasHourse()), "宋体", Font.BOLD, textColor, textFontSize, x, y, 1);
+                bgImage = ImageUtils.pressText(bgImage, "房：" + StringUtils.stripToEmpty(apiBaseDictPoService.selectDictLabel("has_hourse_status", wwdUserDto.getHasHourse())), "宋体", Font.BOLD, textColor, textFontSize, x, y, 1);
                 y += lineHeight;
-                bgImage = ImageUtils.pressText(bgImage, "车：" + apiBaseDictPoService.selectDictLabel("has_car_status", wwdUserDto.getHasCar()), "宋体", Font.BOLD, textColor, textFontSize, x, y, 1);
+                bgImage = ImageUtils.pressText(bgImage, "车：" + StringUtils.stripToEmpty(apiBaseDictPoService.selectDictLabel("has_car_status", wwdUserDto.getHasCar())), "宋体", Font.BOLD, textColor, textFontSize, x, y, 1);
                 y += lineHeight;
-                bgImage = ImageUtils.pressText(bgImage, "抽烟：" + apiBaseDictPoService.selectDictLabel("smoking_status", wwdUserDto.getSmoking()), "宋体", Font.BOLD, textColor, textFontSize, x, y, 1);
+                bgImage = ImageUtils.pressText(bgImage, "抽烟：" + StringUtils.stripToEmpty(apiBaseDictPoService.selectDictLabel("smoking_status", wwdUserDto.getSmoking())), "宋体", Font.BOLD, textColor, textFontSize, x, y, 1);
                 y += lineHeight;
-                bgImage = ImageUtils.pressText(bgImage, "喝酒：" + apiBaseDictPoService.selectDictLabel("drinking_status", wwdUserDto.getDrinking()), "宋体", Font.BOLD, textColor, textFontSize, x, y, 1);
+                bgImage = ImageUtils.pressText(bgImage, "喝酒：" + StringUtils.stripToEmpty(apiBaseDictPoService.selectDictLabel("drinking_status", wwdUserDto.getDrinking())), "宋体", Font.BOLD, textColor, textFontSize, x, y, 1);
                 y += lineHeight;
                 bgImage = ImageUtils.pressText(bgImage, "标签信息：" + hobbyType, "宋体", Font.BOLD, textColor, textFontSize, x, y, 1);
-                String _description = "补充介绍：" + wwdUserDto.getDescription();
+                String _description = "补充介绍：" + StringUtils.stripToEmpty(wwdUserDto.getDescription());
                 int descriptionLength = _description.length();
 
                 String lineDescription = "";
@@ -213,21 +228,67 @@ public class ApiWwdUserCardPoServiceImpl extends ApiBaseServiceImpl<WwdUserCardP
                     }
                 }
 
-                y = 910;
+                y = 970;
                 bgImage = ImageUtils.pressText(bgImage, "择偶标准/理想类型", "宋体", Font.BOLD, textColor, titleFontSize, x_center, y, 1);
                 y += 30;
                 lineDescription = "";
-                String _stardard = "  " + wwdUserDto.getStandard();
+                String _stardard = "  " + StringUtils.stripToEmpty(wwdUserDto.getStandard());
                 descriptionLength = _stardard.length();
                 for (int i = 0; i < descriptionLength; i++) {
                     lineDescription += _stardard.charAt(i);
                     if (lineDescription.length() == 38 || i + 1 == descriptionLength) {
                         y += lineHeight;
-                        bgImage = ImageUtils.pressText(bgImage, lineDescription, "宋体", Font.BOLD, textColor, textFontSize, x, y, 1);
+                        bgImage = ImageUtils.pressText(bgImage, StringUtils.stripToEmpty(lineDescription), "宋体", Font.BOLD, textColor, textFontSize, x, y, 1);
                         lineDescription = "";
                     }
                 }
 
+
+                // 现在使用永久二维码
+                WwdUserParamQrcodePo paramQrcodePo = apiWwdUserParamQrcodePoService.selectByWwdUserIdAndIsLimit(wwdUserDto.getId(),BasePo.YesNo.Y);
+                if (paramQrcodePo == null) {
+                    //生成微信带参数二维码，以关注公众帐号
+                    QrCodeTicketDto qrCodeTicketDto = PublicUtils.createQrCodeLimit(sceneStr,which);
+                    if (qrCodeTicketDto != null) {
+                        WwdUserParamQrcodePo paramQrcodePo1 = new WwdUserParamQrcodePo();
+                        paramQrcodePo1.setWwdUserId(wwdUserDto.getId());
+                        paramQrcodePo1.setTicket(qrCodeTicketDto.getTicket());
+                        paramQrcodePo1.setExpireSeconds(qrCodeTicketDto.getExpireSeconds());
+                        paramQrcodePo1.setContent(qrCodeTicketDto.getUrl());
+                        paramQrcodePo1.setIsLimit(BasePo.YesNo.Y.name());
+                        paramQrcodePo1 = apiWwdUserParamQrcodePoService.preInsert(paramQrcodePo1,currentUserId);
+                        paramQrcodePo = apiWwdUserParamQrcodePoService.insertSimple(paramQrcodePo1);
+                    }
+                }
+
+                // 自己生成带参数的二维码
+                int margin = 50;
+                int footheight = 150;
+                try {
+                    BufferedImage logo = ImageUtils.createImage(wwdcardbgPath + File.separator + "logo.png");
+                    BufferedImage templogo = ImageUtils.zoomEqualRatioImageByWidth(logo,40);
+                    BufferedImage qrcode = ImageUtils.createQrCodeWithLogo(footheight,
+                            paramQrcodePo.getContent(),
+                            "utf-8",0,
+                            Color.white, Color.BLACK, templogo);
+
+                    ImageUtils.pressImage(bgImage,qrcode,bgImage.getWidth() - qrcode.getWidth() - margin,bgImage.getHeight() - qrcode.getHeight() - margin,1.0f);
+
+                    // 添加logo
+                    logo = ImageUtils.createImage(wwdcardbgPath + File.separator + "logo-mini.png");
+                    ImageUtils.pressImage(bgImage,logo,margin,bgImage.getHeight() - logo.getHeight() - margin,1.0f);
+
+                    // 中间文字
+                    String word = "• 缘 分 从 这 一 刻 开 始 •";
+                    int fontSize = 26;
+                    bgImage = ImageUtils.pressText(bgImage, word, "宋体", Font.BOLD, textColor,
+                            fontSize,
+                            bgImage.getWidth()/2 - (8 * fontSize  +  fontSize * 11/2)/2,// 8个中文字符11个英语字符
+                            bgImage.getHeight() - (margin + footheight)/2 - fontSize/2,
+                            1);
+                } catch (WriterException e) {
+                    logger.error(e.getMessage(),e);
+                }
 
                 String resultPath = apiCloudStorageService.uploadSuffix(ImageUtils.bufferedImageToInputStream(bgImage, "png"),"/wwdcard",".png");
                 // 判断是否已存在，
@@ -244,7 +305,6 @@ public class ApiWwdUserCardPoServiceImpl extends ApiBaseServiceImpl<WwdUserCardP
                     this.preInsert(userCardPodb,userId);
                     this.insertSelective(userCardPodb);
                 }
-
             } catch (IOException e) {
                 logger.error(e.getMessage(), e);
             }

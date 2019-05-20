@@ -9,6 +9,8 @@ import com.feihua.framework.base.modules.role.dto.BaseRoleDto;
 import com.feihua.framework.base.modules.user.api.ApiBaseUserPoService;
 import com.feihua.framework.base.modules.user.dto.BaseUserDto;
 import com.feihua.framework.constants.DictEnum;
+import com.feihua.framework.message.api.MessageSendHelper;
+import com.feihua.framework.message.dto.MessageSendForUserParamsDto;
 import com.feihua.framework.rest.ResponseJsonRender;
 import com.feihua.framework.rest.interceptor.RepeatFormValidator;
 import com.feihua.framework.rest.modules.common.mvc.BaseController;
@@ -73,6 +75,9 @@ public class WwdActivityOrderController extends BaseController {
     private ApiWwdUserPoService apiWwdUserPoService;
     @Autowired
     private ApiPayService<WxUnifiedOrderForInnerParam> apiWxPayForInnerService;
+
+    @Autowired
+    private MessageSendHelper messageSendHelper;
     /**
      * 单资源，添加
      * @param dto
@@ -501,6 +506,21 @@ public class WwdActivityOrderController extends BaseController {
         wwdParticipateUpdate.setPayStatus(Constants.PayStatus.offline_pay.name());
         apiWwdParticipateService.updateByPrimaryKeySelective(wwdParticipateUpdate);
 
+        // 发送消息
+        MessageSendForUserParamsDto messageSendForUserParamsDto = new MessageSendForUserParamsDto();
+        messageSendForUserParamsDto.setClientCode("h5");
+        messageSendForUserParamsDto.setTemplateCode("wwd_activity_participate_success");
+        messageSendForUserParamsDto.setUserId(getLoginUserId());
+        messageSendForUserParamsDto.setCurrentUserId(getLoginUserId());
+        messageSendForUserParamsDto.setCurrentRoleId(getLoginUserRole().getId());
+        Map<String,String> templateParams = new HashMap<>();
+        templateParams.put("activity_first","您好，你已成功报名了活动");
+        templateParams.put("activity_name",wwdActivityDto.getTitle());
+        templateParams.put("activity_time",CalendarUtils.dateToString(wwdActivityDto.getStartTime(), CalendarUtils.DateStyle.YYYY_MM_DD_HH_MM_SS));
+        templateParams.put("activity_address",wwdActivityDto.getAddr());
+        templateParams.put("activity_remark","感谢您的参与");
+        messageSendForUserParamsDto.setTemplateParams(templateParams);
+        messageSendHelper.messageSendForUser(messageSendForUserParamsDto);
         // 查询是否已支付
         return returnDto(wwdActivityOrder,resultData);
     }
@@ -589,6 +609,7 @@ public class WwdActivityOrderController extends BaseController {
                        }
                    }
 
+                   // 发送消息
 
                }else {
                    logger.error("sign error sign={},newsign={}",sign,newsign);

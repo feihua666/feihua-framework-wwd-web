@@ -237,7 +237,7 @@ public class WwdUserCardController extends BaseController {
     @RepeatFormValidator
     //@RequiresPermissions("user")
     @RequestMapping(value = "/user/generatecard",method = RequestMethod.POST)
-    public ResponseEntity generateCard(String userId){
+    public ResponseEntity generateCard(String userId,String sceneStr,String which){
         logger.info("生成卡片开始");
         logger.info("当前登录用户id:{}",getLoginUser().getId());
         ResponseJsonRender resultData=new ResponseJsonRender();
@@ -245,7 +245,7 @@ public class WwdUserCardController extends BaseController {
         if(StringUtils.isEmpty(userId)) {
             userId = getLoginUserId();
         }
-        WwdUserCardPo cardPo = apiWwdUserCardPoService.generateCard(userId);
+        WwdUserCardPo cardPo = apiWwdUserCardPoService.generateCard(userId,sceneStr,which,getLoginUserId());
 
         if (cardPo == null) {
             // 资源不存在

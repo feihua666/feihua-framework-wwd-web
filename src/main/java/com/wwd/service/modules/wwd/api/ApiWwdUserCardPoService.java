@@ -11,7 +11,7 @@ import feihua.jdbc.api.pojo.PageResultDto;
 public interface ApiWwdUserCardPoService extends feihua.jdbc.api.service.ApiBaseService<WwdUserCardPo, WwdUserCardDto, String> {
     PageResultDto<WwdUserCardDto> searchWwdUserCardsDsf(com.wwd.service.modules.wwd.dto.SearchWwdUserCardsConditionDto dto, feihua.jdbc.api.pojo.PageAndOrderbyParamDto pageAndOrderbyParamDto);
 
-    WwdUserCardPo generateCard(String userId);
+    WwdUserCardPo generateCard(String userId,String sceneStr,String which,String currentUserId);
 
     WwdUserCardPo selectByWwdUserId(String wwdUserId);
 }
