@@ -33,10 +33,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -267,15 +264,22 @@ public class WwdParticipateController extends BaseController {
 	@RepeatFormValidator
 	@RequiresPermissions("wwd:participate:participate")
 	@RequestMapping(value = "/participate/user/current", method = RequestMethod.POST)
-	public ResponseEntity participate(String activityId, String name, String mobile, String idCardNo, String saveToInfo) {
+	public ResponseEntity participate(String activityId, String name, String mobile, String idCardNo, String saveToInfo,@RequestParam("gender") String gender) {
 		logger.info("报名活动开始");
 		logger.info("当前登录用户id:{}", getLoginUser().getId());
 		ResponseJsonRender resultData = new ResponseJsonRender();
 		// 查询活动信息
 		WwdActivityDto wwdActivityDto = apiWwdActivityService.selectByPrimaryKey(activityId);
-
-
 		WwdUserDto wwdUserDto = apiWwdUserPoService.selectByUserId(getLoginUser().getId());
+		//更新性别
+		if (StringUtils.isNotEmpty(gender) && (StringUtils.isEmpty(wwdUserDto.getGender()) || !gender.equals(wwdUserDto.getGender()))) {
+			WwdUserPo wwdUserPo = new WwdUserPo();
+			wwdUserPo.setId(wwdUserDto.getId());
+			wwdUserPo.setGender(gender);
+			apiWwdUserPoService.updateByPrimaryKeySelective(wwdUserPo);
+			wwdUserDto.setGender(gender);
+		}
+
 		if (wwdActivityDto == null) {
 			return super.returnDto(null, resultData);
 		}
