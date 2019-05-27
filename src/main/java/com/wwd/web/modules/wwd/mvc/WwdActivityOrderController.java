@@ -506,6 +506,8 @@ public class WwdActivityOrderController extends BaseController {
         wwdParticipateUpdate.setPayStatus(Constants.PayStatus.offline_pay.name());
         apiWwdParticipateService.updateByPrimaryKeySelective(wwdParticipateUpdate);
 
+        checkActivityStatus(wwdActivityDto, wwdParticipate);
+
         // 发送消息
         MessageSendForUserParamsDto messageSendForUserParamsDto = new MessageSendForUserParamsDto();
         messageSendForUserParamsDto.setClientCode("h5");
@@ -524,6 +526,39 @@ public class WwdActivityOrderController extends BaseController {
         // 查询是否已支付
         return returnDto(wwdActivityOrder,resultData);
     }
+
+    /**
+     * 报名完处理活动状态
+     * @param wwdActivityDto
+     * @param wwdParticipateDb
+     */
+    private void checkActivityStatus(WwdActivityDto wwdActivityDto, WwdParticipate wwdParticipateDb) {
+        if (Constants.HeadCountRule.unlimited.name().equals(wwdActivityDto.getHeadcountRule())) {
+            if (!new Integer(0).equals(wwdActivityDto.getHeadcount())) {
+                // 修改活动是否已满状态
+                // 查询报名人数
+                int headcount = apiWwdParticipateService.selectCountPaidParticipate(wwdParticipateDb.getWwdActivityId());
+                // 报名人数已满
+                if (headcount >= wwdActivityDto.getHeadcount()) {
+                    WwdActivity wwdActivity = new WwdActivity();
+                    wwdActivity.setId(wwdActivityDto.getId());
+                    wwdActivity.setStatus(Constants.ActivityStatus.QUOTA_FULL.getCode());
+                    apiWwdActivityService.updateByPrimaryKeySelective(wwdActivity);
+                }
+            }
+        } else if (Constants.HeadCountRule.custom.name().equals(wwdActivityDto.getHeadcountRule())) {
+            int headcount_female = apiWwdParticipateService.selectCountPaidParticipate(wwdParticipateDb.getWwdActivityId(), DictEnum.Gender.female.name());
+            int headcount_male = apiWwdParticipateService.selectCountPaidParticipate(wwdParticipateDb.getWwdActivityId(), DictEnum.Gender.male.name());
+            // 报名人数已满
+            if (headcount_female >= wwdActivityDto.getHeadcountFemale() && headcount_male >= wwdActivityDto.getHeadcountMale()) {
+                WwdActivity wwdActivity = new WwdActivity();
+                wwdActivity.setId(wwdActivityDto.getId());
+                wwdActivity.setStatus(Constants.ActivityStatus.QUOTA_FULL.getCode());
+                apiWwdActivityService.updateByPrimaryKeySelective(wwdActivity);
+            }
+        }
+    }
+
     /**
      * 查询当前登录用户订单状态
      * @param id
@@ -584,30 +619,8 @@ public class WwdActivityOrderController extends BaseController {
 
                    WwdParticipate wwdParticipateDb = apiWwdParticipateService.selectByPrimaryKeySimple(wwdActivityOrderDb.getParticipateId());
                    WwdActivityDto wwdActivityDto = apiWwdActivityService.selectByPrimaryKey(wwdParticipateDb.getWwdActivityId());
-                   if(Constants.HeadCountRule.unlimited.name().equals(wwdActivityDto.getHeadcountRule())){
-                       if (!new Integer(0).equals(wwdActivityDto.getHeadcount())) {
-                           // 修改活动是否已满状态
-                           // 查询报名人数
-                           int headcount = apiWwdParticipateService.selectCountPaidParticipate(wwdParticipateDb.getWwdActivityId());
-                           // 报名人数已满
-                           if( headcount >= wwdActivityDto.getHeadcount()){
-                               WwdActivity wwdActivity = new WwdActivity();
-                               wwdActivity.setId(wwdActivityDto.getId());
-                               wwdActivity.setStatus(Constants.ActivityStatus.QUOTA_FULL.getCode());
-                               apiWwdActivityService.updateByPrimaryKeySelective(wwdActivity);
-                           }
-                       }
-                   }else if(Constants.HeadCountRule.custom.name().equals(wwdActivityDto.getHeadcountRule())){
-                       int headcount_female = apiWwdParticipateService.selectCountPaidParticipate(wwdParticipateDb.getWwdActivityId(),DictEnum.Gender.female.name());
-                       int headcount_male = apiWwdParticipateService.selectCountPaidParticipate(wwdParticipateDb.getWwdActivityId(),DictEnum.Gender.male.name());
-                       // 报名人数已满
-                       if( headcount_female >= wwdActivityDto.getHeadcountFemale() &&  headcount_male >= wwdActivityDto.getHeadcountMale()){
-                           WwdActivity wwdActivity = new WwdActivity();
-                           wwdActivity.setId(wwdActivityDto.getId());
-                           wwdActivity.setStatus(Constants.ActivityStatus.QUOTA_FULL.getCode());
-                           apiWwdActivityService.updateByPrimaryKeySelective(wwdActivity);
-                       }
-                   }
+                   //
+                   checkActivityStatus(wwdActivityDto, wwdParticipateDb);
 
                    // 发送消息
 
