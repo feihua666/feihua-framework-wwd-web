@@ -2,6 +2,9 @@ package com.wwd.service.impl;
 
 import com.feihua.framework.base.modules.config.api.ApiBaseConfigService;
 import com.feihua.framework.base.modules.config.po.BaseConfig;
+import com.feihua.framework.message.MsgTemplateUtils;
+import com.feihua.framework.message.api.ApiBaseMessageTemplatePoService;
+import com.feihua.framework.message.po.BaseMessageTemplatePo;
 import com.feihua.utils.xml.XmlUtils;
 import com.feihua.wechat.publicplatform.PublicUtils;
 import com.feihua.wechat.publicplatform.api.MsgTypeHandler;
@@ -13,6 +16,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.dom4j.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 处理扫描带参数二维码
@@ -27,10 +33,8 @@ import org.springframework.stereotype.Service;
 public class WwdScanQuSceneMsgHandler implements MsgTypeHandler {
     private static final String qrScene_pre = "qrscene_";
     private static final String card_wwdUserId_pre = "card_wwdUserId_";
-    private static final String share_wwd_user_detail_uni_app_url = "share_wwd_user_detail_uni_app_url";
-    private static final String wwdUserId_param = "{{wwdUserId}}";
-    private static final String url_param = "{{url}}";
-    private static final String name_param = "{{name}}";
+    private static final String wwdUserId_param = "wwdUserId";
+    private static final String name_param = "name";
     private static final String subscribe = "subscribe";
     private static final String share_wwd_user_detail_uni_app_msg_content = "share_wwd_user_detail_uni_app_msg_content";
 
@@ -38,7 +42,7 @@ public class WwdScanQuSceneMsgHandler implements MsgTypeHandler {
     private ApiWwdUserPoService apiWwdUserPoService;
 
     @Autowired
-    private ApiBaseConfigService apiBaseConfigService;
+    private ApiBaseMessageTemplatePoService apiBaseMessageTemplatePoService;
 
     public String handleMsg( String postXmlData, String which) {
         Document document = XmlUtils.stringToDocument(postXmlData);
@@ -62,12 +66,6 @@ public class WwdScanQuSceneMsgHandler implements MsgTypeHandler {
                         name = wwdUserDto.getNickname();
                     }
 
-                    String url = "http://api.51match.cn/uni-app/#/pages/detail/detail?wwdUserId={{wwdUserId_param}}";
-                    BaseConfig baseConfig = apiBaseConfigService.selectByConfigKey(share_wwd_user_detail_uni_app_url);
-                    if (baseConfig != null && StringUtils.isNotEmpty(baseConfig.getConfigValue())) {
-                        url = baseConfig.getConfigValue();
-                    }
-                    url = url.replace(wwdUserId_param,wwdUserId);
                     String r = "";
 
                     if(subscribe.equals(event)){
@@ -75,10 +73,12 @@ public class WwdScanQuSceneMsgHandler implements MsgTypeHandler {
                         if (StringUtils.isNotEmpty(subMessage)) {
                             r += subMessage + "\n";
                         }
-
                     }
-                    BaseConfig content = apiBaseConfigService.selectByConfigKey(share_wwd_user_detail_uni_app_msg_content);
-                    r += content.getConfigValue().replace(name_param,name).replace(url_param,url);
+                    BaseMessageTemplatePo messageTemplatePo = apiBaseMessageTemplatePoService.selectByTemplateCode(share_wwd_user_detail_uni_app_msg_content);
+                    Map<String, String> params = new HashMap<>();
+                    params.put(wwdUserId_param,wwdUserDto.getId());
+                    params.put(name_param,name);
+                    r += MsgTemplateUtils.replace(messageTemplatePo.getContent(),params);
                     ResponseTextMessage responseTextMessage = new ResponseTextMessage();
                     responseTextMessage.setContent(r);
                     PublicUtils.userChange(requestSubscribeMessage, responseTextMessage);

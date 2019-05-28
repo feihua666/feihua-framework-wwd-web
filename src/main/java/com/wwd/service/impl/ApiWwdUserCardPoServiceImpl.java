@@ -117,7 +117,12 @@ public class ApiWwdUserCardPoServiceImpl extends ApiBaseServiceImpl<WwdUserCardP
                 // 主图
                 String mainUrl = userPicMap.get("main");
                 if (StringUtils.isNotEmpty(mainUrl)) {
-                    BufferedImage pressImg = ImageUtils.inputStreamToBufferedImage(download(mainUrl));
+                    BufferedImage pressImg = null;
+                    try {
+                        pressImg = ImageUtils.inputStreamToBufferedImage(download(mainUrl,true));
+                    }catch (IllegalArgumentException e){
+                        pressImg = ImageUtils.inputStreamToBufferedImage(download(mainUrl,false));
+                    }
                     if (pressImg != null) {
                         int width = 280;
                         if (pressImg.getWidth() > width) {
@@ -137,7 +142,12 @@ public class ApiWwdUserCardPoServiceImpl extends ApiBaseServiceImpl<WwdUserCardP
                 for (int i = 0; i < 3; i++) {
                     String url = userPicMap.get(i + 1 + "");
                     if (StringUtils.isNotEmpty(url)) {
-                        BufferedImage pressImg = ImageUtils.inputStreamToBufferedImage(download(url));
+                        BufferedImage pressImg = null;
+                        try {
+                            pressImg = ImageUtils.inputStreamToBufferedImage(download(url,true));
+                        }catch (IllegalArgumentException e){
+                            pressImg = ImageUtils.inputStreamToBufferedImage(download(url,false));
+                        }
                         if (pressImg == null) {
                             continue;
                         }
@@ -340,9 +350,13 @@ public class ApiWwdUserCardPoServiceImpl extends ApiBaseServiceImpl<WwdUserCardP
         return super.wrapDto(po);
     }
 
-    private ByteArrayInputStream download(String url) throws IOException {
+    private ByteArrayInputStream download(String url,boolean userParam) throws IOException {
         HttpClient client = HttpClientUtils.getClient();
-        HttpGet get = new HttpGet(url + "?x-oss-process=image/auto-orient,1");
+        String _url = url;
+        if (userParam) {
+            _url += "?x-oss-process=image/auto-orient,1";
+        }
+        HttpGet get = new HttpGet(_url);
 
         HttpResponse httpResponse =  client.execute(get);
         InputStream inputStream = httpResponse.getEntity().getContent();
