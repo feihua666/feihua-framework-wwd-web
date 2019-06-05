@@ -336,6 +336,7 @@ public class WwdParticipateController extends BaseController {
 			wwdParticipateBeInsert.setWwdActivityId(activityId);
 			wwdParticipateBeInsert.setName(name);
 			wwdParticipateBeInsert.setMobile(mobile);
+			wwdParticipateBeInsert.setIdCardNo(idCardNo);
 			// 未支付
 
 			wwdParticipateBeInsert.setPayStatus(Constants.PayStatus.no_pay.name());
@@ -346,6 +347,7 @@ public class WwdParticipateController extends BaseController {
 		} else {
 			wwdParticipate.setName(name);
 			wwdParticipate.setMobile(mobile);
+			wwdParticipate.setIdCardNo(idCardNo);
 			wwdParticipate = apiWwdParticipateService.preUpdate(wwdParticipate, getLoginUserId());
 			apiWwdParticipateService.updateByPrimaryKeySelective(wwdParticipate);
 		}
