@@ -271,7 +271,6 @@ public class WwdActivityOrderController extends BaseController {
      * @param id
      * @return
      */
-    @RepeatFormValidator
     @RequiresPermissions("wwd:activity:order:getById")
     @RequestMapping(value = "/activity/order/{id}",method = RequestMethod.GET)
     public ResponseEntity getById(@PathVariable String id){
@@ -293,7 +292,6 @@ public class WwdActivityOrderController extends BaseController {
      * @param dto
      * @return
      */
-    @RepeatFormValidator
     @RequiresPermissions("wwd:activity:order:search")
     @RequestMapping(value = "/activity/orders",method = RequestMethod.GET)
     public ResponseEntity search(SearchWwdActivityOrdersConditionDto dto){
