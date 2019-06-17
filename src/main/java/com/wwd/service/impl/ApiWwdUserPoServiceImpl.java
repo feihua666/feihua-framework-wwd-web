@@ -97,6 +97,8 @@ public class ApiWwdUserPoServiceImpl extends ApiBaseServiceImpl<WwdUserPo, WwdUs
         wwdUserDto.setMaritalStatus(po.getMaritalStatus());
         wwdUserDto.setBirthDay(po.getBirthDay());
         wwdUserDto.setShowInList(po.getShowInList());
+        wwdUserDto.setCarCity(po.getCarCity());
+        wwdUserDto.setHourseCity(po.getHourseCity());
         return wwdUserDto;
     }
 }

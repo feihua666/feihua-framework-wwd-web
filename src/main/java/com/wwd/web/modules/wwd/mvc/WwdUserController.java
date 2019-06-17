@@ -181,6 +181,10 @@ public class WwdUserController extends BaseController {
         basePo.setProfession(updateFormDto.getProfession());
         basePo.setWeight(updateFormDto.getWeight());
         basePo.setHasCar(updateFormDto.getHasCar());
+
+        basePo.setCarCity(updateFormDto.getCarCity());
+        basePo.setHourseCity(updateFormDto.getHourseCity());
+
         //默认只要修改，就已认证
         basePo.setIsverified(BasePo.YesNo.Y.name());
         // 设置完成，默认展示
@@ -272,7 +276,7 @@ public class WwdUserController extends BaseController {
     }
 
     /**
-     * 单资源，更新当前用户资料
+     * 单资源，更新当前用户显示与否
      * @return
      */
     @RepeatFormValidator

@@ -216,9 +216,21 @@ public class ApiWwdUserCardPoServiceImpl extends ApiBaseServiceImpl<WwdUserCardP
                 y += lineHeight;
                 bgImage = ImageUtils.pressText(bgImage, "学历：" + StringUtils.stripToEmpty(apiBaseDictPoService.selectDictLabel("education_level", wwdUserDto.getEducation())), "宋体", Font.BOLD, textColor, textFontSize, x, y, 1);
                 y += lineHeight;
-                bgImage = ImageUtils.pressText(bgImage, "房：" + StringUtils.stripToEmpty(apiBaseDictPoService.selectDictLabel("has_hourse_status", wwdUserDto.getHasHourse())), "宋体", Font.BOLD, textColor, textFontSize, x, y, 1);
+                String hourseCity = "";
+                if (StringUtils.isNotEmpty(wwdUserDto.getHourseCity())){
+                    hourseCity = "("+ wwdUserDto.getHourseCity() +")";
+                }
+                bgImage = ImageUtils.pressText(bgImage,
+                        "房：" + StringUtils.stripToEmpty(apiBaseDictPoService.selectDictLabel("has_hourse_status", wwdUserDto.getHasHourse())) + hourseCity,
+                        "宋体", Font.BOLD, textColor, textFontSize, x, y, 1);
                 y += lineHeight;
-                bgImage = ImageUtils.pressText(bgImage, "车：" + StringUtils.stripToEmpty(apiBaseDictPoService.selectDictLabel("has_car_status", wwdUserDto.getHasCar())), "宋体", Font.BOLD, textColor, textFontSize, x, y, 1);
+                String carCity = "";
+                if (StringUtils.isNotEmpty(wwdUserDto.getCarCity())){
+                    carCity = "("+ wwdUserDto.getCarCity() +")";
+                }
+                bgImage = ImageUtils.pressText(bgImage,
+                        "车：" + StringUtils.stripToEmpty(apiBaseDictPoService.selectDictLabel("has_car_status", wwdUserDto.getHasCar())) + carCity,
+                        "宋体", Font.BOLD, textColor, textFontSize, x, y, 1);
                 y += lineHeight;
                 bgImage = ImageUtils.pressText(bgImage, "抽烟：" + StringUtils.stripToEmpty(apiBaseDictPoService.selectDictLabel("smoking_status", wwdUserDto.getSmoking())), "宋体", Font.BOLD, textColor, textFontSize, x, y, 1);
                 y += lineHeight;

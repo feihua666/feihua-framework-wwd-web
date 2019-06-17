@@ -64,8 +64,11 @@ public class UpdateWwdUserFormDto extends UpdateFormDto {
     private String maritalStatus;
 
     private String hasCar;
+    private String carCity;
+
 
     private String hasHourse;
+    private String hourseCity;
 
     private Date birthDay;
 
@@ -328,5 +331,21 @@ public class UpdateWwdUserFormDto extends UpdateFormDto {
 
     public void setIdType(String idType) {
         this.idType = idType;
+    }
+
+    public String getCarCity() {
+        return carCity;
+    }
+
+    public void setCarCity(String carCity) {
+        this.carCity = carCity;
+    }
+
+    public String getHourseCity() {
+        return hourseCity;
+    }
+
+    public void setHourseCity(String hourseCity) {
+        this.hourseCity = hourseCity;
     }
 }
