@@ -75,8 +75,8 @@ public class ApiWwdUserCardPoServiceImpl extends ApiBaseServiceImpl<WwdUserCardP
     }
 
     @Override
-    public WwdUserCardPo generateCard(String userId,String sceneStr,String which,String currentUserId) {
-        WwdUserDto wwdUserDto = apiWwdUserPoService.selectByUserId(userId);
+    public WwdUserCardPo generateCard(GenerateCardParamDto generateCardParamDto) {
+        WwdUserDto wwdUserDto = apiWwdUserPoService.selectByUserId(generateCardParamDto.getUserId());
         if (wwdUserDto == null) {
             return null;
         }else {
@@ -86,19 +86,47 @@ public class ApiWwdUserCardPoServiceImpl extends ApiBaseServiceImpl<WwdUserCardP
             ordery.put("orderable","true");
 
             List<WwdUserPicDto> userPicDtos = apiWwdUserPicPoService.selectByWwdUserId(wwdUserDto.getId(),OrderbyUtils.getOrderbyFromMap(ordery));
-            Map<String, String> userPicMap = new HashMap<>();
+            Map<String, String> userPicMapMain = new HashMap<>();
+            Map<String, String> userPicMapNormal = new HashMap<>();
             if (userPicDtos != null) {
                 int putIndex = 1;
                 for (int i = 0; i < userPicDtos.size(); i++) {
                     WwdUserPicDto picDto = userPicDtos.get(i);
                     if ("main".equals(picDto.getType())) {
-                        userPicMap.put("main", picDto.getPicOriginUrl());
+                        userPicMapMain.put("main", picDto.getPicOriginUrl());
                     } else {
-                        userPicMap.put(putIndex + "", picDto.getPicOriginUrl());
+                        userPicMapNormal.put(putIndex + "", picDto.getPicOriginUrl());
                         putIndex++;
                     }
-
                 }
+
+                // 判断自定义,支持自定义图片
+
+                List<String> mainSelect = generateCardParamDto.getMainPicSelectedIds();
+                if (mainSelect != null && !mainSelect.isEmpty()) {
+                    String mainPicId = mainSelect.get(0);
+                    for (WwdUserPicDto userPicDto : userPicDtos) {
+                        if (userPicDto.getId().equals(mainPicId)) {
+                            userPicMapMain.put("main", userPicDto.getPicOriginUrl());
+                        }
+                    }
+                }
+                List<String> normalSelect = generateCardParamDto.getNormalPicSelectedIds();
+                if (normalSelect != null && !normalSelect.isEmpty()) {
+                    userPicMapNormal.clear();
+                    putIndex = 1;
+                    for (int i = 0; i < userPicDtos.size(); i++) {
+                        for (String normalPicId : normalSelect) {
+                            if (userPicDtos.get(i).getId().equals(normalPicId)){
+                                userPicMapNormal.put(putIndex + "", userPicDtos.get(i).getPicOriginUrl());
+                                putIndex++;
+                                break;
+                            }
+                        }
+
+                    }
+                }
+
             }
 
             String wwdcardbgPath = RequestUtils.getRequest().getSession().getServletContext().getRealPath("") + File.separator + "WEB-INF" + File.separator + "wwdcardbg";
@@ -115,7 +143,7 @@ public class ApiWwdUserCardPoServiceImpl extends ApiBaseServiceImpl<WwdUserCardP
                 BufferedImage bgImage = ImageUtils.createImage(bgPath);
                 // 添加图片
                 // 主图
-                String mainUrl = userPicMap.get("main");
+                String mainUrl = userPicMapMain.get("main");
                 if (StringUtils.isNotEmpty(mainUrl)) {
                     BufferedImage pressImg = null;
                     try {
@@ -139,8 +167,12 @@ public class ApiWwdUserCardPoServiceImpl extends ApiBaseServiceImpl<WwdUserCardP
                 int imgY = 675;
                 int imgX = 90;
                 int height = 270;
-                for (int i = 0; i < 3; i++) {
-                    String url = userPicMap.get(i + 1 + "");
+                int normalcount = 0;
+                for (String normalPicKey : userPicMapNormal.keySet()) {
+                    if (normalcount >=3){
+                        break;
+                    }
+                    String url = userPicMapNormal.get(normalPicKey);
                     if (StringUtils.isNotEmpty(url)) {
                         BufferedImage pressImg = null;
                         try {
@@ -161,7 +193,10 @@ public class ApiWwdUserCardPoServiceImpl extends ApiBaseServiceImpl<WwdUserCardP
                         }
                         ImageUtils.pressImage(bgImage, pressImg, imgX, imgY, 1.0f);
                         imgX += width + 30;
+                        normalcount ++;
                     }
+
+
                 }
 
                 WwdUserAreaDto userAreaDto = apiWwdUserAreaPoService.selectByWwdUserId(wwdUserDto.getId());
@@ -265,12 +300,11 @@ public class ApiWwdUserCardPoServiceImpl extends ApiBaseServiceImpl<WwdUserCardP
                     }
                 }
 
-
                 // 现在使用永久二维码
                 WwdUserParamQrcodePo paramQrcodePo = apiWwdUserParamQrcodePoService.selectByWwdUserIdAndIsLimit(wwdUserDto.getId(),BasePo.YesNo.Y);
                 if (paramQrcodePo == null) {
                     //生成微信带参数二维码，以关注公众帐号
-                    QrCodeTicketDto qrCodeTicketDto = PublicUtils.createQrCodeLimit(sceneStr,which);
+                    QrCodeTicketDto qrCodeTicketDto = PublicUtils.createQrCodeLimit(generateCardParamDto.getSceneStr(),generateCardParamDto.getWhich());
                     if (qrCodeTicketDto != null) {
                         WwdUserParamQrcodePo paramQrcodePo1 = new WwdUserParamQrcodePo();
                         paramQrcodePo1.setWwdUserId(wwdUserDto.getId());
@@ -278,7 +312,7 @@ public class ApiWwdUserCardPoServiceImpl extends ApiBaseServiceImpl<WwdUserCardP
                         paramQrcodePo1.setExpireSeconds(qrCodeTicketDto.getExpireSeconds());
                         paramQrcodePo1.setContent(qrCodeTicketDto.getUrl());
                         paramQrcodePo1.setIsLimit(BasePo.YesNo.Y.name());
-                        paramQrcodePo1 = apiWwdUserParamQrcodePoService.preInsert(paramQrcodePo1,currentUserId);
+                        paramQrcodePo1 = apiWwdUserParamQrcodePoService.preInsert(paramQrcodePo1,generateCardParamDto.getCurrentUserId());
                         paramQrcodePo = apiWwdUserParamQrcodePoService.insertSimple(paramQrcodePo1);
                     }
                 }
@@ -324,7 +358,7 @@ public class ApiWwdUserCardPoServiceImpl extends ApiBaseServiceImpl<WwdUserCardP
                     userCardPodb = new WwdUserCardPo();
                     userCardPodb.setPicOriginUrl(resultPath);
                     userCardPodb.setWwdUserId(wwdUserDto.getId());
-                    this.preInsert(userCardPodb,userId);
+                    this.preInsert(userCardPodb,generateCardParamDto.getCurrentUserId());
                     this.insertSelective(userCardPodb);
                 }
             } catch (IOException e) {

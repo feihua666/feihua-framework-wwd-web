@@ -16,6 +16,7 @@ import com.feihua.utils.io.StreamUtils;
 import com.wwd.service.modules.wwd.api.ApiWwdUserPoService;
 import com.wwd.service.modules.wwd.api.ApiWwdUserTagPoService;
 import com.wwd.service.modules.wwd.dto.*;
+import com.wwd.web.modules.wwd.dto.GenerateCardFormDto;
 import feihua.jdbc.api.pojo.BasePo;
 import feihua.jdbc.api.pojo.PageAndOrderbyParamDto;
 import feihua.jdbc.api.pojo.PageResultDto;
@@ -237,15 +238,26 @@ public class WwdUserCardController extends BaseController {
     @RepeatFormValidator
     //@RequiresPermissions("user")
     @RequestMapping(value = "/user/generatecard",method = RequestMethod.POST)
-    public ResponseEntity generateCard(String userId,String sceneStr,String which){
+    public ResponseEntity generateCard(GenerateCardFormDto formDto){
         logger.info("生成卡片开始");
-        logger.info("当前登录用户id:{}",getLoginUser().getId());
+        logger.info("当前登录用户id:{}",getLoginUserId());
         ResponseJsonRender resultData=new ResponseJsonRender();
 
-        if(StringUtils.isEmpty(userId)) {
-            userId = getLoginUserId();
+        if(StringUtils.isEmpty(formDto.getUserId())) {
+            formDto.setUserId(getLoginUserId());
         }
-        WwdUserCardPo cardPo = apiWwdUserCardPoService.generateCard(userId,sceneStr,which,getLoginUserId());
+        GenerateCardParamDto generateCardParamDto = new GenerateCardParamDto();
+        generateCardParamDto.setUserId(formDto.getUserId());
+        generateCardParamDto.setMainPicSelectedIds(formDto.getMainPicSelectedIds());
+        generateCardParamDto.setNormalPicSelectedIds(formDto.getNormalPicSelectedIds());
+        generateCardParamDto.setSceneStr(formDto.getSceneStr());
+        generateCardParamDto.setWhich(formDto.getWhich());
+
+        generateCardParamDto.setCurrentPostId(getLoginUserPostId());
+        generateCardParamDto.setCurrentRoleId(getLoginUserRoleId());
+        generateCardParamDto.setCurrentUserId(getLoginUserId());
+
+        WwdUserCardPo cardPo = apiWwdUserCardPoService.generateCard(generateCardParamDto);
 
         if (cardPo == null) {
             // 资源不存在
