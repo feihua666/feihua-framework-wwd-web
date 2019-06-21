@@ -3,51 +3,36 @@ package com.wwd.web.modules.wwd.mvc;
 import com.feihua.exception.DataNotFoundException;
 import com.feihua.framework.base.modules.area.api.ApiBaseAreaPoService;
 import com.feihua.framework.base.modules.area.dto.BaseAreaDto;
-import com.feihua.framework.base.modules.dict.api.ApiBaseDictPoService;
-import com.feihua.framework.base.modules.dict.po.BaseDictPo;
+import com.feihua.framework.base.modules.loginclient.api.ApiBaseLoginClientPoService;
+import com.feihua.framework.base.modules.loginclient.po.BaseLoginClientPo;
 import com.feihua.framework.base.modules.rel.api.ApiBaseUserRoleRelPoService;
 import com.feihua.framework.base.modules.rel.dto.BaseUserRoleRelDto;
 import com.feihua.framework.base.modules.rel.dto.UserBindRolesParamDto;
 import com.feihua.framework.base.modules.role.api.ApiBaseRolePoService;
 import com.feihua.framework.base.modules.role.dto.BaseRoleDto;
+import com.feihua.framework.base.modules.user.api.ApiBaseUserAccessLasttimePoService;
 import com.feihua.framework.base.modules.user.api.ApiBaseUserPoService;
 import com.feihua.framework.base.modules.user.dto.BaseUserDto;
+import com.feihua.framework.base.modules.user.po.BaseUserAccessLasttimePo;
 import com.feihua.framework.base.modules.user.po.BaseUserPo;
-import com.feihua.framework.constants.DictEnum;
+import com.feihua.framework.rest.ResponseJsonRender;
+import com.feihua.framework.rest.interceptor.RepeatFormValidator;
+import com.feihua.framework.rest.modules.common.mvc.BaseController;
 import com.feihua.framework.shiro.pojo.ShiroUser;
 import com.feihua.framework.shiro.utils.ShiroUtils;
-import com.feihua.framework.utils.AliOssClientHelper;
 import com.feihua.utils.calendar.CalendarUtils;
-import com.feihua.utils.graphic.ImageUtils;
-import com.feihua.utils.http.httpServletRequest.RequestUtils;
-import com.feihua.utils.http.httpclient.HttpClientUtils;
-import com.feihua.wechat.common.api.ApiWeixinUserPoService;
-import com.feihua.wechat.common.dto.WeixinUserDto;
-import com.feihua.wechat.common.po.WeixinUserPo;
-import com.wwd.Constants;
-import com.wwd.frameworksupport.UserAuthHelper;
+import com.feihua.utils.http.httpServletResponse.ResponseCode;
 import com.wwd.service.modules.wwd.api.*;
 import com.wwd.service.modules.wwd.dto.*;
 import com.wwd.service.modules.wwd.po.WwdUserAreaPo;
 import com.wwd.service.modules.wwd.po.WwdUserInvitationPo;
-import com.wwd.service.modules.wwd.po.WwdUserPicPo;
 import com.wwd.service.modules.wwd.po.WwdUserPo;
-import com.feihua.framework.rest.ResponseJsonRender;
-import com.feihua.framework.rest.interceptor.RepeatFormValidator;
-import com.feihua.framework.rest.modules.common.mvc.BaseController;
-import com.feihua.utils.http.httpServletResponse.ResponseCode;
 import com.wwd.web.modules.wwd.dto.UpdateWwdUserFormDto;
 import feihua.jdbc.api.pojo.BasePo;
 import feihua.jdbc.api.pojo.PageAndOrderbyParamDto;
 import feihua.jdbc.api.pojo.PageResultDto;
 import feihua.jdbc.api.utils.OrderbyUtils;
 import feihua.jdbc.api.utils.PageUtils;
-import net.coobird.thumbnailator.Thumbnails;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,14 +44,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.imageio.ImageIO;
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.io.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * 汪汪队用户管理
@@ -98,6 +76,10 @@ public class WwdUserController extends BaseController {
 
     @Autowired
     private ApiBaseUserRoleRelPoService apiBaseUserRoleRelPoService;
+    @Autowired
+    private ApiBaseLoginClientPoService apiBaseLoginClientPoService;
+    @Autowired
+    private ApiBaseUserAccessLasttimePoService apiBaseUserAccessLasttimePoService;
 
     /**
      * 单资源，更新
@@ -413,7 +395,7 @@ public class WwdUserController extends BaseController {
      */
     @RequiresPermissions("wwd:user:search")
     @RequestMapping(value = "/users",method = RequestMethod.GET)
-    public ResponseEntity search(SearchWwdUsersConditionDto dto,boolean includePic){
+    public ResponseEntity search(SearchWwdUsersConditionDto dto,boolean includeAccessInfo){
 
         ResponseJsonRender resultData=new ResponseJsonRender();
         PageAndOrderbyParamDto pageAndOrderbyParamDto = new PageAndOrderbyParamDto(PageUtils.getPageFromThreadLocal(), OrderbyUtils.getOrderbyFromThreadLocal());
@@ -422,18 +404,35 @@ public class WwdUserController extends BaseController {
         dto.setCurrentRoleId(getLoginUserRoleId());
         PageResultDto<WwdUserPageDto> list = apiWwdUserPoService.searchWwdUsersDsfMultiTable(dto,pageAndOrderbyParamDto);
         if (list != null && list.getData() != null && !list.getData().isEmpty()) {
-            List<String> ids = new ArrayList<>(list.getData().size());
+            List<String> userIds = new ArrayList<>(list.getData().size());
             for (WwdUserPageDto wwdUserPageDto : list.getData()) {
                 wwdUserPageDto.getWwdUserDto().setWechatNumber(null);
-                ids.add(wwdUserPageDto.getWwdUserDto().getUserId());
+                userIds.add(wwdUserPageDto.getWwdUserDto().getUserId());
             }
-            List<BaseUserDto> userList = apiBaseUserPoService.selectByPrimaryKeys(ids,false);
+            List<BaseUserDto> userList = apiBaseUserPoService.selectByPrimaryKeys(userIds,false);
             Map<String,Object> photos = new HashMap<>();
             for (BaseUserDto userDto : userList) {
                 photos.put(userDto.getId(),userDto.getPhoto());
             }
-
             resultData.addData("photo",photos);
+            if (includeAccessInfo) {
+                Date now = new Date();
+                BaseLoginClientPo loginClientPo = apiBaseLoginClientPoService.selectByClientCode("h5");
+                if (loginClientPo != null) {
+                    Map<String,Object> accessInfos = new HashMap<>();
+                    for (String userId : userIds) {
+                        BaseUserAccessLasttimePo userAccessLasttimePo = apiBaseUserAccessLasttimePoService.selectByUserIdAndClientId(userId,loginClientPo.getId());
+                        if (userAccessLasttimePo != null) {
+                            Map<String,Object> item = new HashMap<>();
+                            item.put("accessLasttime",userAccessLasttimePo.getAccessLasttime());
+                            item.put("accessLasttimeText",CalendarUtils.showTime(userAccessLasttimePo.getAccessLasttime(),now));
+
+                            accessInfos.put(userId,item);
+                        }
+                    }
+                    resultData.addData("accessInfo",accessInfos);
+                }
+            }
         }
         return super.returnPageResultDto(list,resultData);
     }

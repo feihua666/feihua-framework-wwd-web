@@ -495,6 +495,7 @@ public class WwdActivityOrderController extends BaseController {
             wwdActivityOrder1.setPayType(Constants.PayType.offline_pay.name());
             wwdActivityOrder1.setRemarks(fee);
             wwdActivityOrder1.setPrice(fee);
+            // hd 为活动的意思
             wwdActivityOrder1.setOrderNo("HD" + CalendarUtils.dateToString(new Date(), CalendarUtils.DateStyle.YYYYMMDDHHMMSS) + RandomStringUtils.randomNumeric(6));
             wwdActivityOrder = apiWwdActivityOrderService.preInsert(wwdActivityOrder1,getLoginUserId());
             wwdActivityOrder = apiWwdActivityOrderService.insertSimple(wwdActivityOrder);
