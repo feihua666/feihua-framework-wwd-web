@@ -117,6 +117,13 @@ public class Constants {
     }
 
     /**
+     * 互选状态
+     */
+    public enum MutualElectionStatus {
+
+        no_start,ongoing,ended
+    }
+    /**
      * 支付状态
      */
     public enum PayStatus {

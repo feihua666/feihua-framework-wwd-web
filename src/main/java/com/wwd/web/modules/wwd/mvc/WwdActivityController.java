@@ -1,5 +1,8 @@
 package com.wwd.web.modules.wwd.mvc;
 
+import com.feihua.framework.base.modules.group.api.ApiBaseUserGroupPoService;
+import com.feihua.framework.base.modules.rel.api.ApiBaseUserUserGroupRelPoService;
+import com.feihua.framework.base.modules.rel.dto.BaseUserUserGroupRelDto;
 import com.feihua.framework.base.modules.role.dto.BaseRoleDto;
 import com.feihua.framework.rest.ResponseJsonRender;
 import com.feihua.framework.rest.interceptor.RepeatFormValidator;
@@ -49,6 +52,10 @@ public class WwdActivityController extends BaseController {
 
     @Autowired
     private ApiWwdUserPoService apiWwdUserPoService;
+    @Autowired
+    private ApiBaseUserGroupPoService apiBaseUserGroupPoService;
+    @Autowired
+    private ApiBaseUserUserGroupRelPoService apiBaseUserUserGroupRelPoService;
 
     /**
      * 单资源，添加
@@ -97,6 +104,8 @@ public class WwdActivityController extends BaseController {
         basePo.setUpdateBy(dto.getUpdateBy());
         basePo.setContent(dto.getContent());
         basePo.setPayType(dto.getPayType());
+        basePo.setMutualElectionStatus(dto.getMutualElectionStatus());
+        basePo.setManageUserGroupId(dto.getManageUserGroupId());
 
         basePo = apiWwdActivityService.preInsert(basePo, getLoginUser().getId());
         WwdActivityDto r = apiWwdActivityService.insert(basePo);
@@ -198,6 +207,8 @@ public class WwdActivityController extends BaseController {
         basePo.setUpdateBy(dto.getUpdateBy());
         basePo.setContent(dto.getContent());
         basePo.setPayType(dto.getPayType());
+        basePo.setMutualElectionStatus(dto.getMutualElectionStatus());
+        basePo.setManageUserGroupId(dto.getManageUserGroupId());
         // 用条件更新，乐观锁机制
         WwdActivity basePoCondition = new WwdActivity();
         basePoCondition.setId(id);
@@ -266,6 +277,8 @@ public class WwdActivityController extends BaseController {
         basePo.setContent(dto.getContent());
         basePo.setRequireIdCard(dto.getRequireIdCard());
         basePo.setPayType(dto.getPayType());
+        basePo.setMutualElectionStatus(Constants.MutualElectionStatus.no_start.name());
+        basePo.setManageUserGroupId(dto.getManageUserGroupId());
         basePo = apiWwdActivityService.preInsert(basePo, getLoginUser().getId());
         WwdActivityDto r = apiWwdActivityService.insert(basePo);
         if (r == null) {
@@ -301,7 +314,7 @@ public class WwdActivityController extends BaseController {
 
         WwdActivity wwdActivity = apiWwdActivityService.selectByPrimaryKeySimple(id);
         int r = 0;
-        if(StringUtils.isNotEmpty(status) && !wwdActivity.getStatus().equals(status)
+        if(wwdActivity != null && StringUtils.isNotEmpty(status) && !wwdActivity.getStatus().equals(status)
                 && Constants.ActivityStatus.getEnumBy(status) != null ){
             wwdActivity.setStatus(status);
 
@@ -330,6 +343,49 @@ public class WwdActivityController extends BaseController {
     }
 
     /**
+     * 单资源，修改互选状态
+     *
+     * @param id
+     * @param status
+     * @return
+     */
+    @RequiresPermissions("wwd:activity:edit:mutualElectionStatus")
+    @RequestMapping(value = "/activity/{id}/mutualElection/{status}", method = RequestMethod.PUT)
+    public ResponseEntity editMutualElectionStatus(@PathVariable String id,@PathVariable String status) {
+        logger.info("汪汪队活动修改互选状态开始");
+        logger.info("当前登录用户id:{}", getLoginUser().getId());
+        logger.info("汪汪队活动id:{}", id);
+        ResponseJsonRender resultData = new ResponseJsonRender();
+
+        WwdActivity wwdActivity = apiWwdActivityService.selectByPrimaryKeySimple(id);
+        int r = 0;
+        if(wwdActivity != null && StringUtils.isNotEmpty(status) ){
+            wwdActivity.setMutualElectionStatus(status);
+
+            // 用条件更新，乐观锁机制
+            WwdActivity basePoCondition = new WwdActivity();
+            basePoCondition.setId(id);
+            basePoCondition.setDelFlag(BasePo.YesNo.N.name());
+            basePoCondition.setUpdateAt(wwdActivity.getUpdateAt());
+            wwdActivity = apiWwdActivityService.preUpdate(wwdActivity, getLoginUser().getId());
+            r = apiWwdActivityService.updateSelective(wwdActivity, basePoCondition);
+        }
+
+        if (r <= 0) {
+            // 更新失败，资源不存在
+            resultData.setCode(ResponseCode.E404_100001.getCode());
+            resultData.setMsg(ResponseCode.E404_100001.getMsg());
+            logger.info("code:{},msg:{}", resultData.getCode(), resultData.getMsg());
+            logger.info("汪汪队活动修改互选状态结束，失败");
+            return new ResponseEntity(resultData, HttpStatus.NOT_FOUND);
+        } else {
+            // 更新成功，已被成功创建
+            logger.info("更新的汪汪队活动id:{}", id);
+            logger.info("汪汪队活动修改互选状态结束，成功");
+            return new ResponseEntity(resultData, HttpStatus.CREATED);
+        }
+    }
+    /**
      * 单资源，获取id汪汪队活动
      *
      * @param id
@@ -343,6 +399,13 @@ public class WwdActivityController extends BaseController {
         WwdActivityDto baseDataScopeDto = apiWwdActivityService.selectByPrimaryKey(id);
         if (baseDataScopeDto != null) {
             resultData.setData(baseDataScopeDto);
+            // 是否具有管理功能,目前在h5上用
+            if (StringUtils.isNotEmpty(baseDataScopeDto.getManageUserGroupId())) {
+                BaseUserUserGroupRelDto userUserGroupRelDto = apiBaseUserUserGroupRelPoService.selectByUserIdAndUserGroupId(getLoginUserId(),baseDataScopeDto.getManageUserGroupId());
+                if (userUserGroupRelDto != null) {
+                    resultData.addData("activityManage",true);
+                }
+            }
             return new ResponseEntity(resultData, HttpStatus.OK);
         } else {
             resultData.setCode(ResponseCode.E404_100001.getCode());

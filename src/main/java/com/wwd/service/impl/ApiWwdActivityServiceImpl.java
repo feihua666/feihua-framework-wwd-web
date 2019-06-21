@@ -72,6 +72,8 @@ public class ApiWwdActivityServiceImpl extends ApiBaseServiceImpl<WwdActivity, W
         dto.setCreateAt(po.getCreateAt());
         dto.setContent(po.getContent());
         dto.setPayType(po.getPayType());
+        dto.setMutualElectionStatus(po.getMutualElectionStatus());
+        dto.setManageUserGroupId(po.getManageUserGroupId());
         return dto;
     }
 }

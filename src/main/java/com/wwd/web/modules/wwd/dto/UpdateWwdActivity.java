@@ -74,6 +74,9 @@ public class UpdateWwdActivity extends UpdateFormDto {
 
     private String payType;
 
+    private String mutualElectionStatus;
+
+    private String manageUserGroupId;
     public String getPayType() {
         return payType;
     }
@@ -328,5 +331,21 @@ public class UpdateWwdActivity extends UpdateFormDto {
 
     public void setRequireIdCard(String requireIdCard) {
         this.requireIdCard = requireIdCard;
+    }
+
+    public String getMutualElectionStatus() {
+        return mutualElectionStatus;
+    }
+
+    public void setMutualElectionStatus(String mutualElectionStatus) {
+        this.mutualElectionStatus = mutualElectionStatus;
+    }
+
+    public String getManageUserGroupId() {
+        return manageUserGroupId;
+    }
+
+    public void setManageUserGroupId(String manageUserGroupId) {
+        this.manageUserGroupId = manageUserGroupId;
     }
 }
