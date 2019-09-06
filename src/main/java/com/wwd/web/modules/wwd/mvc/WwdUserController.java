@@ -3,6 +3,8 @@ package com.wwd.web.modules.wwd.mvc;
 import com.feihua.exception.DataNotFoundException;
 import com.feihua.framework.base.modules.area.api.ApiBaseAreaPoService;
 import com.feihua.framework.base.modules.area.dto.BaseAreaDto;
+import com.feihua.framework.base.modules.config.api.ApiBaseConfigService;
+import com.feihua.framework.base.modules.config.po.BaseConfig;
 import com.feihua.framework.base.modules.loginclient.api.ApiBaseLoginClientPoService;
 import com.feihua.framework.base.modules.loginclient.po.BaseLoginClientPo;
 import com.feihua.framework.base.modules.rel.api.ApiBaseUserRoleRelPoService;
@@ -33,6 +35,7 @@ import feihua.jdbc.api.pojo.PageAndOrderbyParamDto;
 import feihua.jdbc.api.pojo.PageResultDto;
 import feihua.jdbc.api.utils.OrderbyUtils;
 import feihua.jdbc.api.utils.PageUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,6 +83,8 @@ public class WwdUserController extends BaseController {
     private ApiBaseLoginClientPoService apiBaseLoginClientPoService;
     @Autowired
     private ApiBaseUserAccessLasttimePoService apiBaseUserAccessLasttimePoService;
+    @Autowired
+    private ApiBaseConfigService apiBaseConfigService;
 
     /**
      * 单资源，更新
@@ -337,21 +342,7 @@ public class WwdUserController extends BaseController {
         resultData.addData("invitedDto",wwdUserInvitationDto);
         return super.returnDto(baseDataScopeDto,resultData);
     }
-    @RequiresPermissions("user")
-    @RequestMapping(value = "/user/current/invited",method = RequestMethod.GET)
-    public ResponseEntity getCurrentUserinvitedDto(){
 
-        ResponseJsonRender resultData=new ResponseJsonRender();
-        String userId = getLoginUser().getId();
-        WwdUserDto userDto = apiWwdUserPoService.selectByUserId(userId);
-        if (userDto == null) {
-            return super.returnDto(null,resultData);
-        }else{
-            // 查询被邀请数据
-            WwdUserInvitationDto  wwdUserInvitationDto = apiWwdUserInvitationPoService.selectByInvitedWWdUserId(userDto.getId());
-            return super.returnDto(wwdUserInvitationDto,resultData);
-        }
-    }
 
     /**
      * 单资源，获取id汪汪队用户未使用的邀请码
@@ -364,26 +355,6 @@ public class WwdUserController extends BaseController {
 
         ResponseJsonRender resultData=new ResponseJsonRender();
         List<WwdUserInvitationDto> list = apiWwdUserInvitationPoService.selectUnUsedByWwdUserId(id);
-        return super.returnList(list,resultData);
-    }
-    /**
-     * 单资源，获取当前用户未使用的邀请码
-     * @return
-     */
-    @RequiresPermissions("wwd:user:invitation:current:getById")
-    @RequestMapping(value = "/user/current/invitation",method = RequestMethod.GET)
-    public ResponseEntity getCurrentUserInvitationCode(){
-
-        ResponseJsonRender resultData=new ResponseJsonRender();
-
-        String userId = getLoginUser().getId();
-        WwdUserDto userDto = apiWwdUserPoService.selectByUserId(userId);
-        List<WwdUserInvitationDto> list = apiWwdUserInvitationPoService.selectUnUsedByWwdUserId(userDto.getId());
-        //如果没有生成一个
-        if (list == null || list.isEmpty()) {
-            list = new ArrayList<>();
-            list.add(apiWwdUserInvitationPoService.generateForWwdUserId(userDto.getId()));
-        }
         return super.returnList(list,resultData);
     }
 
@@ -436,13 +407,48 @@ public class WwdUserController extends BaseController {
         }
         return super.returnPageResultDto(list,resultData);
     }
+
+    /**
+     * 单资源，获取当前用户未使用的邀请码
+     * @return
+     */
+    @RequiresPermissions("wwd:user:invitation:current:getById")
+    @RequestMapping(value = "/user/current/invitation",method = RequestMethod.GET)
+    public ResponseEntity getCurrentUserInvitationCode(){
+
+        ResponseJsonRender resultData=new ResponseJsonRender();
+
+        BaseConfig configQuery = new BaseConfig();
+        configQuery.setConfigKey("WX_PLATFORM_INVITED");
+        configQuery.setStatus(BasePo.YesNo.Y.name());
+        configQuery.setDelFlag(BasePo.YesNo.N.name());
+        BaseConfig baseConfig = apiBaseConfigService.selectOneSimple(configQuery);
+        if(baseConfig!=null){
+            return super.returnList(null, resultData);
+        }
+
+
+        String userId = getLoginUser().getId();
+        WwdUserDto userDto = apiWwdUserPoService.selectByUserId(userId);
+        List<WwdUserInvitationDto> list = apiWwdUserInvitationPoService.selectUnUsedByWwdUserId(userDto.getId());
+
+
+        //如果没有生成一个
+        if (baseConfig== null && list == null || list.isEmpty()) {
+            list = new ArrayList<>();
+            list.add(apiWwdUserInvitationPoService.generateForWwdUserId(userDto.getId()));
+        }
+        return super.returnList(list,resultData);
+    }
+
+
     /**
      * 单资源，获取id汪汪队用户未使用的邀请码
      * @param id wwd_user_id
      * @return
      */
     @RequiresPermissions("wwd:user:wechatNumber:getById")
-    @RequestMapping(value = "/user/{id}/wechatNumber",method = RequestMethod.GET)
+    @RequestMapping(value = "/user/{id}/enjoyCode",method = RequestMethod.GET)
     public ResponseEntity getWechatNumber(@PathVariable String id){
 
         ResponseJsonRender resultData=new ResponseJsonRender();
@@ -452,10 +458,18 @@ public class WwdUserController extends BaseController {
         // 他是否对我有意思
         WwdUserEnjoyDto wwdUserEnjoyDtoIt = apiWwdUserEnjoyPoService.selectEnjoyedFromTo( id,userDto.getId());
         Map<String,Object> r = null;
-        if (wwdUserEnjoyDtoIt != null && wwdUserEnjoyDtoMy != null) {
+        if (wwdUserEnjoyDtoMy != null && wwdUserEnjoyDtoIt!=null) {
             r = new HashMap<>();
             userDto = apiWwdUserPoService.selectByPrimaryKey(id);
-            r.put("wechatNumber",userDto.getWechatNumber());
+            if(!userDto.getWechatNumber().isEmpty()){
+                byte[] bytes = userDto.getWechatNumber().getBytes();
+                List list = new ArrayList();
+                for (byte aByte : bytes) {
+                    list.add(aByte + "");
+                }
+                Collections.reverse(list);
+                r.put("enjoyCode",StringUtils.join(list,"-").trim());
+            }
         }
         return super.returnDto( r,resultData);
     }
@@ -506,6 +520,121 @@ public class WwdUserController extends BaseController {
         return super.returnList(wwdUserDtos, resultData);
     }
 
+    /**
+     * 当前用户是否被邀请
+     * @return
+     */
+    @RequiresPermissions("user")
+    @RequestMapping(value = "/user/current/invited",method = RequestMethod.GET)
+    public ResponseEntity getCurrentUserinvitedDto(){
+
+        ResponseJsonRender resultData=new ResponseJsonRender();
+        String userId = getLoginUser().getId();
+        WwdUserDto userDto = apiWwdUserPoService.selectByUserId(userId);
+
+        BaseConfig configQuery = new BaseConfig();
+        configQuery.setConfigKey("WX_PLATFORM_INVITED");
+        configQuery.setStatus(BasePo.YesNo.Y.name());
+        configQuery.setDelFlag(BasePo.YesNo.N.name());
+        BaseConfig baseConfig = apiBaseConfigService.selectOneSimple(configQuery);
+
+
+        //微信公众号是否需要邀请
+        if (userDto == null && baseConfig!= null && StringUtils.isNotBlank(baseConfig.getConfigValue())) {
+            WwdUserInvitationDto wwdUserInvitationDto = acceptInvitedByConfigWwdUserId(baseConfig.getConfigValue());
+            return  super.returnDto(wwdUserInvitationDto,resultData);
+        }
+        else if (userDto == null && baseConfig == null) {
+            return super.returnDto(null,resultData);
+        }else{
+            // 查询被邀请数据
+            WwdUserInvitationDto  wwdUserInvitationDto = apiWwdUserInvitationPoService.selectByInvitedWWdUserId(userDto.getId());
+            return super.returnDto(wwdUserInvitationDto,resultData);
+        }
+    }
+
+    public WwdUserInvitationDto acceptInvitedByConfigWwdUserId(String wwdUserId){
+
+
+        ShiroUser su = getLoginUser();
+
+        // 判断是否已被邀请
+        String userId = getLoginUser().getId();
+        WwdUserDto userDto = apiWwdUserPoService.selectByUserId(userId);
+        //如果没有生成一个
+        WwdUserInvitationDto wwdUserInvitationDto = null;
+        if (userDto != null) {
+            // 查询被邀请数据
+             wwdUserInvitationDto = apiWwdUserInvitationPoService.selectByInvitedWWdUserId(userDto.getId());
+            // 如果存在被邀请数据，已被邀请过，请勿重复
+            if (wwdUserInvitationDto != null) {
+                return wwdUserInvitationDto;
+            }
+        }
+
+        else{
+            List<WwdUserInvitationDto> list = apiWwdUserInvitationPoService.selectUnUsedByWwdUserId(wwdUserId);
+
+            if (list == null || list.isEmpty()) {
+                wwdUserInvitationDto = apiWwdUserInvitationPoService.generateForWwdUserId(wwdUserId);
+            }else {
+                wwdUserInvitationDto = list.get(0);
+            }
+
+            // 添加wwduser
+            WwdUserPo wwdUserPo = new WwdUserPo();
+            wwdUserPo.setUserId(su.getId());
+            wwdUserPo.setNickname(su.getNickname());
+            wwdUserPo.setName(su.getNickname());
+            wwdUserPo.setGender(su.getGender());
+            wwdUserPo.setIsverified(BasePo.YesNo.N.name());
+            wwdUserPo.setShowInList(BasePo.YesNo.N.name());
+            apiWwdUserPoService.preInsert(wwdUserPo,BasePo.DEFAULT_USER_ID);
+            WwdUserDto wwdUserDto = apiWwdUserPoService.insertSelective(wwdUserPo);
+
+            // 正常情况
+            //将邀请码标记为已使用
+            WwdUserInvitationPo wwdUserInvitationPo = new WwdUserInvitationPo();
+            wwdUserInvitationPo.setId(wwdUserInvitationDto.getId());
+            wwdUserInvitationPo.setIsUsed(BasePo.YesNo.Y.name());
+            wwdUserInvitationPo.setInvitedWwdUserId(wwdUserDto.getId());
+            apiWwdUserInvitationPoService.preUpdate(wwdUserInvitationPo,BasePo.DEFAULT_USER_ID);
+            apiWwdUserInvitationPoService.updateByPrimaryKeySelective(wwdUserInvitationPo);
+
+            // 添加一条区域空数据，以备以后只做更新
+            WwdUserAreaPo wwdUserAreaPo = new WwdUserAreaPo();
+            wwdUserAreaPo.setWwdUserId(wwdUserDto.getId());
+            apiWwdUserAreaPoService.preInsert(wwdUserAreaPo,BasePo.DEFAULT_USER_ID);
+            apiWwdUserAreaPoService.insertSelective(wwdUserAreaPo);
+        }
+
+        if (su != null) {
+            //给用户分配小程序角色
+            String roleCode = "wwd_mini_program_role";
+            BaseRoleDto baseRoleDto = apiBaseRolePoService.selectByCode(roleCode);
+            if(baseRoleDto != null){
+
+                // 查询用户是否绑定了角色
+                BaseUserRoleRelDto dbrel = apiBaseUserRoleRelPoService.selectByUserIdAndRoleId(su.getId(),baseRoleDto.getId());
+                if (dbrel == null) {
+                    logger.info("用户角色分配：nickname：{},ID：{},wwd_mini_program_role",su.getNickname(),su.getId());
+                    UserBindRolesParamDto userBindRolesParamDto = new UserBindRolesParamDto();
+                    userBindRolesParamDto.setCurrentUserId(BasePo.DEFAULT_USER_ID);
+                    userBindRolesParamDto.setUserId(su.getId());
+                    List<String> roleIds = new ArrayList<>(1);
+                    roleIds.add(baseRoleDto.getId());
+                    userBindRolesParamDto.setRoleIds(roleIds);
+                    apiBaseUserRoleRelPoService.userBindRoles(userBindRolesParamDto);
+
+                    // 清空用户权限缓存
+                    ShiroUtils.refreshShiroUserInfoImidiately();
+                    ShiroUtils.clearCachedAuthorizationInfo();
+                }
+
+            }
+        }
+        return wwdUserInvitationDto;
+    }
 
 
 
@@ -594,8 +723,8 @@ public class WwdUserController extends BaseController {
 
                 // 查询用户是否绑定了角色
                 BaseUserRoleRelDto dbrel = apiBaseUserRoleRelPoService.selectByUserIdAndRoleId(su.getId(),baseRoleDto.getId());
-
                 if (dbrel == null) {
+                    logger.info("用户角色分配：nickname：{},ID：{},wwd_mini_program_role",su.getNickname(),su.getId());
                     UserBindRolesParamDto userBindRolesParamDto = new UserBindRolesParamDto();
                     userBindRolesParamDto.setCurrentUserId(BasePo.DEFAULT_USER_ID);
                     userBindRolesParamDto.setUserId(su.getId());
