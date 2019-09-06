@@ -337,11 +337,21 @@ public class ApiWwdUserCardPoServiceImpl extends ApiBaseServiceImpl<WwdUserCardP
                     // 中间文字
                     String word = "• 缘 分 从 这 一 刻 开 始 •";
                     int fontSize = 26;
-                    bgImage = ImageUtils.pressText(bgImage, word, "宋体", Font.BOLD, textColor,
+                    int _height = bgImage.getHeight() - (margin + footheight)/2 - fontSize/2 - 25;
+                            bgImage = ImageUtils.pressText(bgImage, word, "宋体", Font.BOLD, textColor,
                             fontSize,
                             bgImage.getWidth()/2 - (8 * fontSize  +  fontSize * 11/2)/2,// 8个中文字符11个英语字符
-                            bgImage.getHeight() - (margin + footheight)/2 - fontSize/2,
+                                    _height,
                             1);
+                    word = "扫码进入公众号  相识更多单身男生女生";
+                    int _fontSize = 17;
+
+                    bgImage = ImageUtils.pressText(bgImage, word, "宋体", Font.PLAIN, textColor,
+                            _fontSize,
+                            bgImage.getWidth()/2 - (18 * _fontSize )/2 + 10,// 77个中文字符2个英语字符=18个中文
+                            _height + _fontSize + 20,
+                            1);
+
                 } catch (WriterException e) {
                     logger.error(e.getMessage(),e);
                 }
