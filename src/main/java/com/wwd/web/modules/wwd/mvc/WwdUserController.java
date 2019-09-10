@@ -42,10 +42,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 
@@ -461,7 +458,7 @@ public class WwdUserController extends BaseController {
         if (wwdUserEnjoyDtoMy != null && wwdUserEnjoyDtoIt!=null) {
             r = new HashMap<>();
             userDto = apiWwdUserPoService.selectByPrimaryKey(id);
-            if(!userDto.getWechatNumber().isEmpty()){
+            if(StringUtils.isNotBlank(userDto.getWechatNumber())){
                 byte[] bytes = userDto.getWechatNumber().getBytes();
                 List list = new ArrayList();
                 for (byte aByte : bytes) {
@@ -646,7 +643,8 @@ public class WwdUserController extends BaseController {
     @RepeatFormValidator
     @RequiresPermissions("user")
     @RequestMapping(value = "/user/acceptInvited",method = RequestMethod.POST)
-    public ResponseEntity acceptInvited(String inviteCode){
+    public ResponseEntity acceptInvited(@RequestParam(value = "inviteCode",required = true) String inviteCode){
+        logger.info("接受邀请：inviteCode：{}",inviteCode);
         ResponseJsonRender resultData=new ResponseJsonRender();
         WwdUserInvitationDto invitationDto = apiWwdUserInvitationPoService.selectUnUsedByCode(inviteCode);
         // 邀请码不存在
