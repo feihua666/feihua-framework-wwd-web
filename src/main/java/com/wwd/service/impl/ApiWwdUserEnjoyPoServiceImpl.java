@@ -34,6 +34,12 @@ public class ApiWwdUserEnjoyPoServiceImpl extends ApiBaseServiceImpl<WwdUserEnjo
     }
 
     @Override
+    public List<WwdUserEnjoyDto> selectByWwdUserId(String wwdUserId,String type,String typeLimit) {
+        List<WwdUserEnjoyPo> wwdUserEnjoyPos = wwdUserEnjoyPoMapper.selectByWwdUserId(wwdUserId, type, typeLimit);
+        return wrapDtos(wwdUserEnjoyPos);
+    }
+
+    @Override
     public List<WwdUserEnjoyDto> selectByWwdUserId(String wwdUserId) {
         WwdUserEnjoyPo wwdUserEnjoyPo = new WwdUserEnjoyPo();
         wwdUserEnjoyPo.setWwdUserId(wwdUserId);

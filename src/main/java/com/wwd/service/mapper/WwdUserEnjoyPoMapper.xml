@@ -1114,4 +1114,15 @@
       where my.del_flag = 'N' and it.del_flag = 'N' and my.wwd_user_id = #{wwdUserId}
 
     </select>
+    <select id="selectByWwdUserId" resultType="com.wwd.service.modules.wwd.po.WwdUserEnjoyPo">
+      select
+      my.id, my.wwd_user_id, my.enjoyed_wwd_user_id, my.message, my.DATA_USER_ID, my.DATA_OFFICE_ID, my.DATA_TYPE,
+    my.DATA_AREA_ID, my.DEL_FLAG, my.CREATE_AT, my.CREATE_BY, my.UPDATE_AT, my.UPDATE_BY
+      from wwd_user_enjoy my
+      where my.del_flag = 'N' and my.wwd_user_id = #{wwdUserId}
+     <if test="(type == 'DAY' or type =='WEEK' or type =='MONTH' or type=='YEAR') and (typeLimit !=null and typeLimit!='')">
+       AND  my.CREATE_AT>DATE_SUB(CURDATE(), INTERVAL ${typeLimit} ${type})
+     </if>
+
+    </select>
 </mapper>

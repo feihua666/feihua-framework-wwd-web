@@ -18,6 +18,15 @@ public interface ApiWwdUserEnjoyPoService extends feihua.jdbc.api.service.ApiBas
     /**
      * 查询我有意思的人
      * @param wwdUserId
+     * @param type
+     * @param typeLimit
+     * @return
+     */
+    List<WwdUserEnjoyDto> selectByWwdUserId(String wwdUserId,String type,String typeLimit);
+
+    /**
+     * 查询我有意思的人
+     * @param wwdUserId
      * @return
      */
     List<WwdUserEnjoyDto> selectByWwdUserId(String wwdUserId);

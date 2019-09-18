@@ -1,11 +1,14 @@
 package com.wwd.web.modules.wwd.mvc;
 
+import com.feihua.framework.base.modules.config.api.ApiBaseConfigService;
+import com.feihua.framework.base.modules.config.po.BaseConfig;
 import com.feihua.framework.message.api.MessageSendHelper;
 import com.feihua.framework.message.dto.MessageSendForUserParamsDto;
 import com.feihua.framework.rest.ResponseJsonRender;
 import com.feihua.framework.rest.interceptor.RepeatFormValidator;
 import com.feihua.framework.rest.modules.common.mvc.BaseController;
 import com.feihua.utils.http.httpServletResponse.ResponseCode;
+import com.feihua.utils.json.JSONUtils;
 import com.wwd.service.modules.wwd.api.ApiWwdUserEnjoyPoService;
 import com.wwd.service.modules.wwd.api.ApiWwdUserPicPoService;
 import com.wwd.service.modules.wwd.api.ApiWwdUserPoService;
@@ -13,7 +16,8 @@ import com.wwd.service.modules.wwd.dto.WwdUserDto;
 import com.wwd.service.modules.wwd.dto.WwdUserEnjoyDto;
 import com.wwd.service.modules.wwd.dto.WwdUserPicDto;
 import com.wwd.service.modules.wwd.po.WwdUserEnjoyPo;
-import feihua.jdbc.api.utils.OrderbyUtils;
+import feihua.jdbc.api.pojo.BasePo;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,6 +56,9 @@ public class WwdEnjoyController extends BaseController {
 	@Autowired
 	private MessageSendHelper messageSendHelper;
 
+	@Autowired
+	private ApiBaseConfigService apiBaseConfigService;
+
 	/**
 	 * 单资源，我是否对他有意思
 	 *
@@ -84,6 +91,30 @@ public class WwdEnjoyController extends BaseController {
 
 		String userId = getLoginUser().getId();
 		final WwdUserDto userDto = apiWwdUserPoService.selectByUserId(userId);
+
+		BaseConfig configQuery = new BaseConfig();
+		configQuery.setConfigKey("WWD_ENJOY_LIMIT");
+		configQuery.setStatus(BasePo.YesNo.Y.name());
+		configQuery.setDelFlag(BasePo.YesNo.N.name());
+		BaseConfig baseConfig = apiBaseConfigService.selectOneSimple(configQuery);
+		if (baseConfig != null && StringUtils.isNotBlank(baseConfig.getConfigValue())) {
+			String enjoyLimit = baseConfig.getConfigValue();
+			try {
+				Map<String, Object> enjoyLimitMap = JSONUtils.json2map(enjoyLimit);
+				List<WwdUserEnjoyDto> wwdUserEnjoyDtos = apiWwdUserEnjoyPoService.selectByWwdUserId(userDto.getId(), enjoyLimitMap.get("type").toString().toUpperCase(), enjoyLimitMap.get("typeLimit").toString());
+				if (wwdUserEnjoyDtos != null && wwdUserEnjoyDtos.size() >= Integer.parseInt(enjoyLimitMap.get("limit").toString())) {
+					// 添加失败
+					resultData.setCode(ResponseCode.E409_100001.getCode());
+					resultData.setMsg("您近期操作已经达到限制次数！");
+					logger.info("code:{},msg:{}", resultData.getCode(), resultData.getMsg());
+					logger.info("汪汪队添加有意思汪汪队添加有意思结束，失败");
+					return new ResponseEntity(resultData, HttpStatus.CONFLICT);
+				}
+			} catch (Exception e) {
+				logger.error("添加有意思限制", e);
+			}
+		}
+
 		final WwdUserDto enjoyedWwdUser = apiWwdUserPoService.selectByPrimaryKey(enjoyedWwdUserId);
 		WwdUserEnjoyPo wwdUserEnjoyPo = new WwdUserEnjoyPo();
 		wwdUserEnjoyPo.setWwdUserId(userDto.getId());
@@ -130,7 +161,7 @@ public class WwdEnjoyController extends BaseController {
 				templateParams.put("nickname", userDto.getNickname());
 				templateParams.put("wwdUserId", userDto.getId());
 				messageSendForUserParamsDto.setTemplateParams(templateParams);
-				messageSendHelper.messageSendForUser(messageSendForUserParamsDto);
+//				messageSendHelper.messageSendForUser(messageSendForUserParamsDto);
 				logger.info("对他她有意思成功，发送消息：{} TO {}", userDto.getNickname(), enjoyedWwdUser.getNickname());
 			} catch (Exception e) {
 				logger.error("有意思发消息异常：", e);
@@ -216,7 +247,7 @@ public class WwdEnjoyController extends BaseController {
 		List<WwdUserDto> wwdUserDtos1 = new ArrayList<>();
 		for (String wwdUserId : wwdUserIds) {
 			for (WwdUserDto wwdUserDto : wwdUserDtos) {
-				if(wwdUserId.equals(wwdUserDto.getId())){
+				if (wwdUserId.equals(wwdUserDto.getId())) {
 					wwdUserDtos1.add(wwdUserDto);
 					break;
 				}
