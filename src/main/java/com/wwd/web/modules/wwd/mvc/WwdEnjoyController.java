@@ -105,7 +105,7 @@ public class WwdEnjoyController extends BaseController {
 				if (wwdUserEnjoyDtos != null && wwdUserEnjoyDtos.size() >= Integer.parseInt(enjoyLimitMap.get("limit").toString())) {
 					// 添加失败
 					resultData.setCode(ResponseCode.E409_100001.getCode());
-					resultData.setMsg("您近期操作已经达到限制次数！");
+					resultData.setMsg(enjoyLimitMap.get("msg").toString());
 					logger.info("code:{},msg:{}", resultData.getCode(), resultData.getMsg());
 					logger.info("汪汪队添加有意思汪汪队添加有意思结束，失败");
 					return new ResponseEntity(resultData, HttpStatus.CONFLICT);
