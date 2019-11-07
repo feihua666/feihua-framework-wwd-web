@@ -17,6 +17,8 @@ public class SearchWwdActivityUserMutualElectionsConditionDto extends BaseCondit
 
     private String selectedWwdUserId;
 
+    private String level;
+
     public String getActivityId() {
         return activityId;
     }
@@ -39,5 +41,13 @@ public class SearchWwdActivityUserMutualElectionsConditionDto extends BaseCondit
 
     public void setSelectedWwdUserId(String selectedWwdUserId) {
         this.selectedWwdUserId = selectedWwdUserId;
+    }
+
+    public String getLevel() {
+        return level;
+    }
+
+    public void setLevel(String level) {
+        this.level = level;
     }
 }

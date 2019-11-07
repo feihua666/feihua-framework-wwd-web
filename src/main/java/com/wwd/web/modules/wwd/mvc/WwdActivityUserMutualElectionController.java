@@ -69,6 +69,7 @@ public class WwdActivityUserMutualElectionController extends SuperController {
         basePo.setActivityId(dto.getActivityId());
         basePo.setWwdUserId(dto.getWwdUserId());
         basePo.setSelectedWwdUserId(dto.getSelectedWwdUserId());
+        basePo.setLevel(dto.getLevel());
 
         basePo = apiWwdActivityUserMutualElectionPoService.preInsert(basePo,getLoginUser().getId());
         WwdActivityUserMutualElectionDto r = apiWwdActivityUserMutualElectionPoService.insert(basePo);
@@ -145,7 +146,7 @@ public class WwdActivityUserMutualElectionController extends SuperController {
         basePo.setActivityId(dto.getActivityId());
         basePo.setWwdUserId(dto.getWwdUserId());
         basePo.setSelectedWwdUserId(dto.getSelectedWwdUserId());
-
+        basePo.setLevel(dto.getLevel());
         // 用条件更新，乐观锁机制
         WwdActivityUserMutualElectionPo basePoCondition = new WwdActivityUserMutualElectionPo();
         basePoCondition.setId(id);

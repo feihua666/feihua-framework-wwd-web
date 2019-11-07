@@ -38,6 +38,7 @@ public class ApiWwdActivityUserMutualElectionPoServiceImpl extends ApiBaseServic
         dto.setActivityId(po.getActivityId());
         dto.setWwdUserId(po.getWwdUserId());
         dto.setSelectedWwdUserId(po.getSelectedWwdUserId());
+        dto.setLevel(po.getLevel());
         dto.setDataUserId(po.getDataUserId());
         dto.setDataOfficeId(po.getDataOfficeId());
         dto.setDataType(po.getDataType());

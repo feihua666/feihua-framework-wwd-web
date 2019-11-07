@@ -16,6 +16,8 @@ public class UpdateWwdActivityUserMutualElectionFormDto extends UpdateFormDto {
 
     private String selectedWwdUserId;
 
+    private String level;
+
     public String getActivityId() {
         return activityId;
     }
@@ -38,5 +40,13 @@ public class UpdateWwdActivityUserMutualElectionFormDto extends UpdateFormDto {
 
     public void setSelectedWwdUserId(String selectedWwdUserId) {
         this.selectedWwdUserId = selectedWwdUserId;
+    }
+
+    public String getLevel() {
+        return level;
+    }
+
+    public void setLevel(String level) {
+        this.level = level;
     }
 }
