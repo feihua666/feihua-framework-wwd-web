@@ -161,7 +161,7 @@ public class WwdEnjoyController extends BaseController {
 				templateParams.put("nickname", userDto.getNickname());
 				templateParams.put("wwdUserId", userDto.getId());
 				messageSendForUserParamsDto.setTemplateParams(templateParams);
-//				messageSendHelper.messageSendForUser(messageSendForUserParamsDto);
+				messageSendHelper.messageSendForUser(messageSendForUserParamsDto);
 				logger.info("对他她有意思成功，发送消息：{} TO {}", userDto.getNickname(), enjoyedWwdUser.getNickname());
 			} catch (Exception e) {
 				logger.error("有意思发消息异常：", e);
