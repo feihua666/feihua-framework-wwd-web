@@ -97,10 +97,20 @@ public class WwdEnjoyController extends BaseController {
 		configQuery.setStatus(BasePo.YesNo.Y.name());
 		configQuery.setDelFlag(BasePo.YesNo.N.name());
 		BaseConfig baseConfig = apiBaseConfigService.selectOneSimple(configQuery);
+		Boolean sendMsg = false;
 		if (baseConfig != null && StringUtils.isNotBlank(baseConfig.getConfigValue())) {
 			String enjoyLimit = baseConfig.getConfigValue();
 			try {
 				Map<String, Object> enjoyLimitMap = JSONUtils.json2map(enjoyLimit);
+				String enabled = enjoyLimitMap.get("enabled").toString();
+				if(StringUtils.isNotBlank(enabled) && !"true".equalsIgnoreCase(enabled)){
+					// 添加失败
+					resultData.setCode(ResponseCode.E409_100001.getCode());
+					resultData.setMsg("该功能尚未开放！");
+					logger.info("code:{},msg:{}", resultData.getCode(), resultData.getMsg());
+					logger.info("汪汪队添加有意思汪汪队添加有意思结束，失败");
+					return new ResponseEntity(resultData, HttpStatus.CONFLICT);
+				}
 				List<WwdUserEnjoyDto> wwdUserEnjoyDtos = apiWwdUserEnjoyPoService.selectByWwdUserId(userDto.getId(), enjoyLimitMap.get("type").toString().toUpperCase(), enjoyLimitMap.get("typeLimit").toString());
 				if (wwdUserEnjoyDtos != null && wwdUserEnjoyDtos.size() >= Integer.parseInt(enjoyLimitMap.get("limit").toString())) {
 					// 添加失败
@@ -109,6 +119,10 @@ public class WwdEnjoyController extends BaseController {
 					logger.info("code:{},msg:{}", resultData.getCode(), resultData.getMsg());
 					logger.info("汪汪队添加有意思汪汪队添加有意思结束，失败");
 					return new ResponseEntity(resultData, HttpStatus.CONFLICT);
+				}
+				String isSendMsg = enjoyLimitMap.get("isSendMsg").toString();
+				if(StringUtils.isNotBlank(isSendMsg) && "true".equalsIgnoreCase(isSendMsg)){
+					sendMsg = true;
 				}
 			} catch (Exception e) {
 				logger.error("添加有意思限制", e);
@@ -130,41 +144,25 @@ public class WwdEnjoyController extends BaseController {
 			logger.info("汪汪队添加有意思汪汪队添加有意思结束，失败");
 			return new ResponseEntity(resultData, HttpStatus.NOT_FOUND);
 		} else {
-			try {
-//				WwdUserEnjoyDto wwdUserEnjoyDto = apiWwdUserEnjoyPoService.selectEnjoyedFromTo(enjoyedWwdUserId, userDto.getId());
-//				if (wwdUserEnjoyDto != null) {
-//					// 相互有意思，发送消息
-//					MessageSendForUserParamsDto messageSendForUserParamsDto = new MessageSendForUserParamsDto();
-//					messageSendForUserParamsDto.setClientCode("h5");
-//					messageSendForUserParamsDto.setTemplateCode("wwd_mutual_election_success");
-//					messageSendForUserParamsDto.setUserId(enjoyedWwdUser.getUserId());
-//					messageSendForUserParamsDto.setCurrentUserId(getLoginUserId());
-//					messageSendForUserParamsDto.setCurrentRoleId(getLoginUserRole().getId());
-//					Map<String, String> templateParams = new HashMap<>();
-//					templateParams.put("nickname", userDto.getNickname());
-//					templateParams.put("wwdUserId", userDto.getId());
-//					messageSendForUserParamsDto.setTemplateParams(templateParams);
-//					messageSendHelper.messageSendForUser(messageSendForUserParamsDto);
-//					logger.info("相互成功，发送消息：{} TO {}", userDto.getNickname(), enjoyedWwdUser.getNickname());
-//
-//				} else {
-//
-//				}
-//				 对他她有意思，发送消息
-				MessageSendForUserParamsDto messageSendForUserParamsDto = new MessageSendForUserParamsDto();
-				messageSendForUserParamsDto.setClientCode("h5");
-				messageSendForUserParamsDto.setTemplateCode("wwd_enjoy_success");
-				messageSendForUserParamsDto.setUserId(enjoyedWwdUser.getUserId());
-				messageSendForUserParamsDto.setCurrentUserId(getLoginUserId());
-				messageSendForUserParamsDto.setCurrentRoleId(getLoginUserRole().getId());
-				Map<String, String> templateParams = new HashMap<>();
-				templateParams.put("nickname", userDto.getNickname());
-				templateParams.put("wwdUserId", userDto.getId());
-				messageSendForUserParamsDto.setTemplateParams(templateParams);
-				messageSendHelper.messageSendForUser(messageSendForUserParamsDto);
-				logger.info("对他她有意思成功，发送消息：{} TO {}", userDto.getNickname(), enjoyedWwdUser.getNickname());
-			} catch (Exception e) {
-				logger.error("有意思发消息异常：", e);
+
+			if (sendMsg) {
+				//对他她有意思，发送消息
+				try {
+					MessageSendForUserParamsDto messageSendForUserParamsDto = new MessageSendForUserParamsDto();
+					messageSendForUserParamsDto.setClientCode("h5");
+					messageSendForUserParamsDto.setTemplateCode("wwd_enjoy_success");
+					messageSendForUserParamsDto.setUserId(enjoyedWwdUser.getUserId());
+					messageSendForUserParamsDto.setCurrentUserId(getLoginUserId());
+					messageSendForUserParamsDto.setCurrentRoleId(getLoginUserRole().getId());
+					Map<String, String> templateParams = new HashMap<>();
+					templateParams.put("nickname", userDto.getNickname());
+					templateParams.put("wwdUserId", userDto.getId());
+					messageSendForUserParamsDto.setTemplateParams(templateParams);
+					messageSendHelper.messageSendForUser(messageSendForUserParamsDto);
+					logger.info("对他她有意思成功，发送消息：{} TO {}", userDto.getNickname(), enjoyedWwdUser.getNickname());
+				} catch (Exception e) {
+					logger.error("有意思发消息异常：", e);
+				}
 			}
 
 			// 添加成功，已被成功创建

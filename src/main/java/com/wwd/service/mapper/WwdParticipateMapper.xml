@@ -1784,20 +1784,5 @@
     <if test="entity.dataAreaId != null  and entity.dataAreaId != ''">
       and DATA_AREA_ID = #{entity.dataAreaId,jdbcType=VARCHAR}
     </if>
-    <if test="entity.delFlag != null and entity.delFlag != ''">
-      and DEL_FLAG = #{entity.delFlag,jdbcType=CHAR}
-    </if>
-    <if test="entity.createAt != null">
-      and CREATE_AT = #{entity.createAt,jdbcType=TIMESTAMP}
-    </if>
-    <if test="entity.createBy != null  and entity.createBy != ''">
-      and CREATE_BY = #{entity.createBy,jdbcType=VARCHAR}
-    </if>
-    <if test="entity.updateAt != null">
-      and UPDATE_AT = #{entity.updateAt,jdbcType=TIMESTAMP}
-    </if>
-    <if test="entity.updateBy != null and entity.updateBy != ''">
-      and  UPDATE_BY = #{entity.updateBy,jdbcType=VARCHAR}
-    </if>
   </select>
 </mapper>

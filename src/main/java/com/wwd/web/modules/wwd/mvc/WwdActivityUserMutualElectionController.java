@@ -30,6 +30,10 @@ import com.wwd.service.modules.wwd.api.ApiWwdActivityUserMutualElectionPoService
 import com.wwd.web.modules.wwd.dto.AddWwdActivityUserMutualElectionFormDto;
 import com.wwd.web.modules.wwd.dto.UpdateWwdActivityUserMutualElectionFormDto;
 import com.wwd.service.modules.wwd.po.WwdActivityUserMutualElectionPo;
+
+import java.util.List;
+import java.util.Map;
+
 /**
  * 活动用户互选
  * Created by yangwei
@@ -209,5 +213,18 @@ public class WwdActivityUserMutualElectionController extends SuperController {
         resultData.setPage(list.getPage());
         return returnList(list.getData(),resultData);
 
+    }
+
+    /**
+     * 复数资源，搜索活动用户互选
+     * @param activityId
+     * @return
+     */
+    @RequiresPermissions("wwd:activity:userMutualElection:getSelectedResult")
+    @RequestMapping(value = "/activityMutualElection/getSelectedResult/{activityId}",method = RequestMethod.GET)
+    public ResponseEntity getSelectedResult(@PathVariable String activityId){
+        ResponseJsonRender resultData = new ResponseJsonRender();
+        List<Map<String, Object>> selectedResult = apiWwdActivityUserMutualElectionPoService.getSelectedResult(activityId);
+        return returnList(selectedResult,resultData);
     }
 }

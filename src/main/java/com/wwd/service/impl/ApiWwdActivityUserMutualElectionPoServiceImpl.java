@@ -7,6 +7,8 @@ import com.wwd.service.modules.wwd.po.WwdActivityUserMutualElectionPo;
 import feihua.jdbc.api.pojo.PageResultDto;
 import feihua.jdbc.api.service.impl.ApiBaseServiceImpl;
 import java.util.List;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -28,6 +30,11 @@ public class ApiWwdActivityUserMutualElectionPoServiceImpl extends ApiBaseServic
         Page p = super.pageAndOrderbyStart(pageAndOrderbyParamDto);
         List<com.wwd.service.modules.wwd.dto.WwdActivityUserMutualElectionDto> list = this.wrapDtos(WwdActivityUserMutualElectionPoMapper.searchWwdActivityUserMutualElections(dto));
         return new PageResultDto(list, this.wrapPage(p));
+    }
+
+    @Override
+    public List<Map<String, Object>> getSelectedResult(String activityId) {
+        return WwdActivityUserMutualElectionPoMapper.getSelectedResult(activityId);
     }
 
     @Override
