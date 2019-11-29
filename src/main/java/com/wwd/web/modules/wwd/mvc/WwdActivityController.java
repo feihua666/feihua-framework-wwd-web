@@ -4,9 +4,12 @@ import com.feihua.framework.base.modules.group.api.ApiBaseUserGroupPoService;
 import com.feihua.framework.base.modules.rel.api.ApiBaseUserUserGroupRelPoService;
 import com.feihua.framework.base.modules.rel.dto.BaseUserUserGroupRelDto;
 import com.feihua.framework.base.modules.role.dto.BaseRoleDto;
+import com.feihua.framework.message.api.MessageSendHelper;
+import com.feihua.framework.message.dto.MessageSendForUserParamsDto;
 import com.feihua.framework.rest.ResponseJsonRender;
 import com.feihua.framework.rest.interceptor.RepeatFormValidator;
 import com.feihua.framework.rest.modules.common.mvc.BaseController;
+import com.feihua.utils.calendar.CalendarUtils;
 import com.feihua.utils.http.httpServletResponse.ResponseCode;
 import com.wwd.Constants;
 import com.wwd.service.modules.wwd.api.ApiWwdActivityService;
@@ -17,6 +20,7 @@ import com.wwd.service.modules.wwd.po.WwdActivity;
 import com.wwd.web.modules.wwd.dto.AddWwdActivity;
 import com.wwd.web.modules.wwd.dto.UpdateWwdActivity;
 import feihua.jdbc.api.pojo.BasePo;
+import feihua.jdbc.api.pojo.Page;
 import feihua.jdbc.api.pojo.PageAndOrderbyParamDto;
 import feihua.jdbc.api.pojo.PageResultDto;
 import feihua.jdbc.api.utils.OrderbyUtils;
@@ -31,7 +35,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 汪汪队活动管理
@@ -57,6 +63,9 @@ public class WwdActivityController extends BaseController {
     @Autowired
     private ApiBaseUserUserGroupRelPoService apiBaseUserUserGroupRelPoService;
 
+
+    @Autowired
+    private MessageSendHelper messageSendHelper;
     /**
      * 单资源，添加
      *
@@ -412,6 +421,49 @@ public class WwdActivityController extends BaseController {
             resultData.setMsg(ResponseCode.E404_100001.getMsg());
             return new ResponseEntity(resultData, HttpStatus.NOT_FOUND);
         }
+    }
+    /**
+     * 单资源，获取id汪汪队活动
+     *
+     * @param id
+     * @return
+     */
+    @RequiresPermissions("wwd:activity:msg")
+    @RequestMapping(value = "/activity/msg/{id}", method = RequestMethod.GET)
+    public ResponseEntity sendMsg(@PathVariable String id) {
+        ResponseJsonRender resultData = new ResponseJsonRender();
+        WwdActivityDto dto = apiWwdActivityService.selectByPrimaryKey(id);
+        SearchWwdParticipatesConditionDto query = new SearchWwdParticipatesConditionDto();
+        query.setPayStatus("paid,offline_pay");
+        query.setStatus("normal,alternate");
+        query.setWwdActivityId(id);
+
+        PageResultDto<WwdParticipateDto> wwdParticipateDtoPageResultDto = apiWwdParticipateService.searchWwdParticipatesDsf(query, new PageAndOrderbyParamDto(new Page()));
+        List<WwdParticipateDto> data = wwdParticipateDtoPageResultDto.getData();
+        for (WwdParticipateDto datum : data) {
+            final WwdUserDto wwdUserDto = apiWwdUserPoService.selectByPrimaryKey(datum.getWwdUserId());
+            //对他她有意思，发送消息
+            try {
+                // 发送消息
+                MessageSendForUserParamsDto messageSendForUserParamsDto = new MessageSendForUserParamsDto();
+                messageSendForUserParamsDto.setClientCode("h5");
+                messageSendForUserParamsDto.setTemplateCode("wwd_mutual_election_msg");
+                messageSendForUserParamsDto.setUserId(wwdUserDto.getUserId());
+                messageSendForUserParamsDto.setCurrentUserId(wwdUserDto.getUserId());
+                messageSendForUserParamsDto.setCurrentRoleId(getLoginUserRole().getId());
+                Map<String,String> templateParams = new HashMap<>();
+                templateParams.put("activity_first","您好，您参与的活动,现在开始互选了");
+                templateParams.put("activity_name",dto.getTitle());
+                templateParams.put("activity_time", CalendarUtils.dateToString(dto.getStartTime(), CalendarUtils.DateStyle.YYYY_MM_DD_HH_MM_SS));
+                templateParams.put("activity_address","线上");
+                templateParams.put("activity_remark","活动互选");
+                messageSendForUserParamsDto.setTemplateParams(templateParams);
+                //messageSendHelper.messageSendForUser(messageSendForUserParamsDto);
+            } catch (Exception e) {
+                logger.error("有意思发消息异常：", e);
+            }
+        }
+        return new ResponseEntity(resultData, HttpStatus.OK);
     }
 
     /**
