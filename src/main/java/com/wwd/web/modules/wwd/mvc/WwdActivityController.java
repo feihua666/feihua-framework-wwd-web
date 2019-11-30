@@ -1,16 +1,22 @@
 package com.wwd.web.modules.wwd.mvc;
 
 import com.feihua.framework.base.modules.group.api.ApiBaseUserGroupPoService;
+import com.feihua.framework.base.modules.loginclient.api.ApiBaseLoginClientPoService;
 import com.feihua.framework.base.modules.rel.api.ApiBaseUserUserGroupRelPoService;
 import com.feihua.framework.base.modules.rel.dto.BaseUserUserGroupRelDto;
 import com.feihua.framework.base.modules.role.dto.BaseRoleDto;
-import com.feihua.framework.message.api.MessageSendHelper;
-import com.feihua.framework.message.dto.MessageSendForUserParamsDto;
+import com.feihua.framework.base.modules.user.api.ApiBaseUserPoService;
+import com.feihua.framework.constants.DictEnum;
+import com.feihua.framework.message.api.*;
+import com.feihua.framework.message.dto.*;
+import com.feihua.framework.message.po.BaseMessagePo;
 import com.feihua.framework.rest.ResponseJsonRender;
 import com.feihua.framework.rest.interceptor.RepeatFormValidator;
 import com.feihua.framework.rest.modules.common.mvc.BaseController;
 import com.feihua.utils.calendar.CalendarUtils;
 import com.feihua.utils.http.httpServletResponse.ResponseCode;
+import com.feihua.utils.json.JSONUtils;
+import com.feihua.utils.collection.CollectionUtils;
 import com.wwd.Constants;
 import com.wwd.service.modules.wwd.api.ApiWwdActivityService;
 import com.wwd.service.modules.wwd.api.ApiWwdParticipateService;
@@ -25,7 +31,6 @@ import feihua.jdbc.api.pojo.PageAndOrderbyParamDto;
 import feihua.jdbc.api.pojo.PageResultDto;
 import feihua.jdbc.api.utils.OrderbyUtils;
 import feihua.jdbc.api.utils.PageUtils;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.slf4j.Logger;
@@ -33,8 +38,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -422,48 +429,131 @@ public class WwdActivityController extends BaseController {
             return new ResponseEntity(resultData, HttpStatus.NOT_FOUND);
         }
     }
+    @Autowired
+    private ApiBaseMessagePoService apiBaseMessagePoService;
+
+    @Autowired
+    private ApiBaseUserPoService apiBaseUserPoService;
+    @Autowired
+    private ApiMessageService apiMessageService;
+    @Autowired
+    private ApiBaseMessageUserPoService apiBaseMessageUserPoService;
+    @Autowired
+    private ApiBaseLoginClientPoService apiBaseLoginClientPoService;
+    @Autowired
+    private ApiBaseMessageTemplatePoService apiBaseMessageTemplatePoService;
+    @Autowired
+    private ApiBaseMessageThirdPoService apiBaseMessageThirdPoService;
+    @InitBinder  //类初始化是调用的方法注解
+    public void initBinder(WebDataBinder binder) {
+        binder.setAutoGrowNestedPaths(true);
+        //给这个controller配置接收list的长度100000，仅在这个controller有效
+        binder.setAutoGrowCollectionLimit(10000);
+
+    }
     /**
-     * 单资源，获取id汪汪队活动
-     *
-     * @param id
+     * 单资源，创建并发送消息
+     * @param
      * @return
      */
-    @RequiresPermissions("wwd:activity:msg")
-    @RequestMapping(value = "/activity/msg/{id}", method = RequestMethod.GET)
-    public ResponseEntity sendMsg(@PathVariable String id) {
+    @RepeatFormValidator
+    @RequiresPermissions("message:newsend")
+    @RequestMapping(value = "/message/newsend/{messageTemplateId}",method = RequestMethod.POST)
+    public ResponseEntity newsend(@PathVariable String messageTemplateId, MessageSendFormDto formDto){
+        logger.info("发送消息开始");
+        logger.info("当前登录用户id:{}",getLoginUser().getId());
+        String currentUserId = getLoginUser().getId();
         ResponseJsonRender resultData = new ResponseJsonRender();
-        WwdActivityDto dto = apiWwdActivityService.selectByPrimaryKey(id);
-        SearchWwdParticipatesConditionDto query = new SearchWwdParticipatesConditionDto();
-        query.setPayStatus("paid,offline_pay");
-        query.setStatus("normal,alternate");
-        query.setWwdActivityId(id);
 
-        PageResultDto<WwdParticipateDto> wwdParticipateDtoPageResultDto = apiWwdParticipateService.searchWwdParticipatesDsf(query, new PageAndOrderbyParamDto(new Page()));
-        List<WwdParticipateDto> data = wwdParticipateDtoPageResultDto.getData();
-        for (WwdParticipateDto datum : data) {
-            final WwdUserDto wwdUserDto = apiWwdUserPoService.selectByPrimaryKey(datum.getWwdUserId());
-            //对他她有意思，发送消息
-            try {
-                // 发送消息
-                MessageSendForUserParamsDto messageSendForUserParamsDto = new MessageSendForUserParamsDto();
-                messageSendForUserParamsDto.setClientCode("h5");
-                messageSendForUserParamsDto.setTemplateCode("wwd_mutual_election_msg");
-                messageSendForUserParamsDto.setUserId(wwdUserDto.getUserId());
-                messageSendForUserParamsDto.setCurrentUserId(wwdUserDto.getUserId());
-                messageSendForUserParamsDto.setCurrentRoleId(getLoginUserRole().getId());
-                Map<String,String> templateParams = new HashMap<>();
-                templateParams.put("activity_first","您好，您参与的活动,现在开始互选了");
-                templateParams.put("activity_name",dto.getTitle());
-                templateParams.put("activity_time", CalendarUtils.dateToString(dto.getStartTime(), CalendarUtils.DateStyle.YYYY_MM_DD_HH_MM_SS));
-                templateParams.put("activity_address","线上");
-                templateParams.put("activity_remark","活动互选");
-                messageSendForUserParamsDto.setTemplateParams(templateParams);
-                //messageSendHelper.messageSendForUser(messageSendForUserParamsDto);
-            } catch (Exception e) {
-                logger.error("有意思发消息异常：", e);
-            }
+
+        BaseMessageTemplateDto
+
+                messageTemplateDto = apiBaseMessageTemplatePoService.selectByPrimaryKey(messageTemplateId);
+
+        CreateMessageParamsDto createMessageParamsDto = new CreateMessageParamsDto();
+        createMessageParamsDto.setTitle(messageTemplateDto.getTitle());
+        createMessageParamsDto.setProfile(messageTemplateDto.getProfile());
+        createMessageParamsDto.setContent(messageTemplateDto.getContent());
+        createMessageParamsDto.setMsgType(messageTemplateDto.getMsgType());
+        createMessageParamsDto.setMsgLevel(messageTemplateDto.getMsgLevel());
+        createMessageParamsDto.setMsgState(DictEnum.MessageState.to_be_sended.name());
+        createMessageParamsDto.setMessageTemplateId(messageTemplateId);
+        try {
+            createMessageParamsDto.setTemplateParams(getTemplateParams(formDto.getTemplateParams()));
+        } catch (Exception e) {
+            logger.error(e.getMessage(),e);
+            return returnBadRequest("templateParam","templateParam is invalid",resultData);
         }
-        return new ResponseEntity(resultData, HttpStatus.OK);
+        createMessageParamsDto.setCurrentUserId(currentUserId);
+        createMessageParamsDto.setCurrentRoleId(getLoginUserRoleId());
+        createMessageParamsDto.setCurrentPostId(getLoginUserPostId());
+        BaseMessagePo r = apiBaseMessagePoService.addMessage(createMessageParamsDto);
+
+
+        return sendMessage(resultData,r.getId(),formDto,currentUserId,getLoginUserRoleId(),getLoginUserPostId());
+
+    }
+
+    private Map<String,String> getTemplateParams(String templateParam) throws Exception {
+        if (StringUtils.isNotEmpty(templateParam)) {
+
+            Map<String,Object> params = JSONUtils.json2map(templateParam);
+            if(params != null && !params.isEmpty()){
+                Map<String,String> _params = new HashMap<>();
+                for (String key : params.keySet()) {
+                    _params.put(key, (String) params.get(key));
+                }
+                return (_params);
+            }
+
+        }
+        return null;
+    }
+
+    private ResponseEntity sendMessage(ResponseJsonRender resultData,String messageId,MessageSendFormDto formDto,String currentUserId,String currentRoleId,String currentPostId){
+        // 发送参数
+        BaseMessageSendParamsDto baseMessageSendParamsDto = new BaseMessageSendParamsDto();
+        baseMessageSendParamsDto.setMessageId(messageId);
+        // 客户端发送参数
+        BaseMessageSendClientParamDto clientParamDto = new BaseMessageSendClientParamDto();
+        clientParamDto.setTargetType(formDto.getTargetType());
+        clientParamDto.setTargetValues(formDto.getTargetValues());
+        List<String> clientIds = formDto.getClientIds();
+        if (clientIds != null && !clientIds.isEmpty()) {
+            clientParamDto.setClients(apiBaseLoginClientPoService.selectByPrimaryKeys(clientIds,false));
+        }
+        baseMessageSendParamsDto.setClientParamDto(clientParamDto);
+        // 虚拟客户端发送参数
+        List<MessageVSendFormDto> vSendFormDtos = formDto.getvSendFormDtos();
+        if (vSendFormDtos!=null ) {
+            // 虚拟客户端容器
+            List<BaseMessageSendVClientParamDto> vClientParamDtos = new ArrayList<>();
+            BaseMessageSendVClientParamDto vClientParamDto = null;
+            for (MessageVSendFormDto vSendFormDto : vSendFormDtos) {
+                vClientParamDto = new BaseMessageSendVClientParamDto();
+                vClientParamDto.setVclient(apiBaseLoginClientPoService.selectByPrimaryKey(vSendFormDto.getClientId(),false));
+                vClientParamDto.setVtargetType(vSendFormDto.getvTargetType());
+                vClientParamDto.setVtargetValues(CollectionUtils.StringToList(vSendFormDto.getvTargetValues(),","));
+                vClientParamDtos.add(vClientParamDto);
+            }
+            baseMessageSendParamsDto.setvClientParamDtos(vClientParamDtos);
+        }
+        baseMessageSendParamsDto.setCurrentUserId(currentUserId);
+        baseMessageSendParamsDto.setCurrentRoleId(currentRoleId);
+        baseMessageSendParamsDto.setCurrentPostId(currentPostId);
+
+        try {
+            apiMessageService.messageSend(baseMessageSendParamsDto,true);
+        }catch (Exception e){
+            resultData.setCode(ResponseCode.E404_100001.getCode());
+            resultData.setMsg(ResponseCode.E404_100001.getMsg());
+            logger.info("code:{},msg:{}",resultData.getCode(),resultData.getMsg());
+            logger.info("发送消息结束，失败");
+            return new ResponseEntity(resultData,HttpStatus.NOT_FOUND);
+        }
+        logger.info("发送消息id:{}",messageId);
+        logger.info("发送消息结束，成功");
+        return new ResponseEntity(resultData, HttpStatus.CREATED);
     }
 
     /**
@@ -498,7 +588,7 @@ public class WwdActivityController extends BaseController {
                 activityDto.setWwdParticipateDtos(wwdParticipateDtoPageResultDto.getData());
             }
         }
-        if (CollectionUtils.isNotEmpty(list.getData())) {
+        if (!CollectionUtils.isEmpty(list.getData())) {
             resultData.setData(data);
             resultData.setPage(list.getPage());
             return new ResponseEntity(resultData, HttpStatus.OK);
@@ -535,7 +625,7 @@ public class WwdActivityController extends BaseController {
                 activityDto.setWwdParticipateDtos(wwdParticipateDtoPageResultDto.getData());
             }
         }
-        if (CollectionUtils.isNotEmpty(list.getData())) {
+        if (!CollectionUtils.isEmpty(list.getData())) {
             resultData.setData(data);
             resultData.setPage(list.getPage());
             return new ResponseEntity(resultData, HttpStatus.OK);
